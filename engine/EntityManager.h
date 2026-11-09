@@ -18,7 +18,7 @@ class EntityManager {
 public:
     static constexpr size_t kNullComponent = std::numeric_limits<size_t>::max();
     using tEntity = std::vector<Entity>;
-    [[nodiscard]] EntityID CreateEntity(const std::string& name) { 
+    [[nodiscard]] EntityID CreateEntity(const std::string& name) {
         tComponentIndices indices;
         indices.fill(kNullComponent);
 
@@ -37,7 +37,6 @@ public:
         mEntities.push_back(Entity(entityID, name));
         mComponentIndices.push_back(indices);
         return entityID;
-
     }
 
     using const_iterator = typename tEntity::const_iterator;
@@ -49,7 +48,7 @@ public:
         }
 
         // remove all components
-        (RemoveComponentIfPresent<Components>(entity), ...); // once per component type
+        (RemoveComponentIfPresent<Components>(entity), ...);  // once per component type
 
         // mark entity as invalid and add to free list
         mEntities[entity].mValid = false;
@@ -60,7 +59,7 @@ public:
     void AddComponent(EntityID entity, T component) {
         assert(IsEntityIDValid(entity));
         constexpr size_t index = GetTypeIndex<T>();
-        ComponentStorage<T>& storage = std::get<index>(mComponentStorages);
+        ComponentStorage<T>& storage = GetComponentStorage<T>();
         size_t slot = mComponentIndices[entity][index];
 
         // if entity already has this component, overwrite it
@@ -76,7 +75,7 @@ public:
 
     template <typename T>
     void RemoveComponent(EntityID entity) {
-        assert(hasComponent<T>(entity));
+        assert(HasComponent<T>(entity));
         if (!HasComponent<T>(entity)) {
             return;
         }
@@ -135,7 +134,8 @@ private:
     // position of T, or kNullComponent
     template <typename T>
     static constexpr size_t FindTypeIndex() {
-        constexpr bool isMatch[] = {std::is_same_v<T, Components>...}; // copies expression once per component type
+        constexpr bool isMatch[] = {
+            std::is_same_v<T, Components>...};  // copies expression once per component type
         for (size_t i = 0; i < sizeof...(Components); i++) {
             if (isMatch[i]) {
                 return i;
