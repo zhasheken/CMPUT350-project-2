@@ -25,18 +25,12 @@ private:
     friend class EntityManager;
 
 public:
-    EntityID GetID() const {
-        return mID;
-    }
+    EntityID GetID() const { return mID; }
 
-    const std::string& GetType() const {
-        return mType;
-    }
+    const std::string& GetType() const { return mType; }
 
     // Check if alive
-    bool IsValid() const {
-        return mValid;
-    }
+    bool IsValid() const { return mValid; }
 };
 
 }  // namespace ECSEngine
