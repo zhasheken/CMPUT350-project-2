@@ -1,3 +1,6 @@
+#ifndef KEYBOARD_H
+#define KEYBOARD_H
+
 namespace ECSEngine {
 
 namespace Key {
@@ -151,3 +154,5 @@ const unsigned int ScanCount = 146;
 }  // namespace Key
 
 }  // namespace ECSEngine
+
+#endif  // KEYBOARD_H
