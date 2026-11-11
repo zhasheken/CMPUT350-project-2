@@ -8,6 +8,9 @@
 
 namespace ECSEngine {
 
+inline constexpr unsigned int kFrameRateLimit = 60;
+
+
 class WindowManager {
 public:
     WindowManager(unsigned int width, unsigned int height, const std::string& title);
@@ -33,7 +36,11 @@ public:
     void DebugFrameRect(const Rect& r, int red, int green, int blue, int alpha = 255);
 
 private:
+    Point2D WindowCenter() const; 
     std::shared_ptr<sf::RenderWindow> mWindow;
+    Point2D mWorldCenter;
+    float mWorldUnitsPerPixel;
+
 };
 
 }  // namespace ECSEngine
