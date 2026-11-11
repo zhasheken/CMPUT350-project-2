@@ -172,6 +172,26 @@ bool ECSEngine<Components...>::ProcessEvents() {
 }
 
 template <typename... Components>
-void ECSEngine<Components...>::DebugDraw() {}
+void ECSEngine<Components...>::DebugDraw() {
+    ComponentStorage<CollisionComponent>& collisions =
+        mEntityManager.template GetComponentStorage<CollisionComponent>();
+
+    // outline every collision box
+    for (size_t i = 0; i < collisions.Size(); i++) {
+        if (!collisions.IsValid(i)) {
+            continue;
+        }
+
+        EntityID owner = collisions.GetOwner(i);
+        Point2D location = mEntityManager.template GetComponent<LocationComponent>(owner).loc;
+        Rect box = collisions.Get(i).collisionBox;
+
+        // boxes are relative to the location
+        box.topLeft.x += location.x;
+        box.topLeft.y += location.y;
+
+        mWindowManager.DebugFrameRect(box, 255, 0, 0);
+    }
+}
 
 }  // namespace ECSEngine
