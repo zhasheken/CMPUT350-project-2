@@ -82,3 +82,5 @@ target_link_libraries(ECSTest PRIVATE ECS)
 
 enable_warnings(ECS)
 enable_warnings(ECSTest)
+
+add_test(NAME ECSTest COMMAND ECSTest)

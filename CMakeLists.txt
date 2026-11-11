@@ -16,5 +16,7 @@ function(enable_warnings target)
     endif()
 endfunction()
 
+enable_testing()
+
 add_subdirectory(engine)
 add_subdirectory(platformer)
