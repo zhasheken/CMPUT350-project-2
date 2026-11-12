@@ -2,10 +2,16 @@
 #include <string>
 
 #include "CameraComponent.h"
+#include "CameraFollowerComponent.h"
+#include "CameraShakeComponent.h"
 #include "CollisionComponent.h"
+#include "Entity.h"
 #include "EntityManager.h"
+#include "GravityComponent.h"
 #include "InputComponent.h"
 #include "LocationComponent.h"
+#include "MovementComponent.h"
+#include "RespawnComponent.h"
 #include "ScoreComponent.h"
 #include "SpawnComponent.h"
 #include "SpriteComponent.h"
@@ -15,8 +21,8 @@ using namespace ECSEngine;
 // same components as the platformer
 using TestManager =
     EntityManager<LocationComponent, MovementComponent, CollisionComponent, SpriteComponent,
-                  SpawnComponent, CameraComponent, CameraFollower, InputComponent, GravityComponent,
-                  CameraShake, ScoreComponent, RespawnComponent>;
+                  SpawnComponent, CameraComponent, CameraFollowerComponent, InputComponent,
+                  GravityComponent, CameraShakeComponent, ScoreComponent, RespawnComponent>;
 
 int gFailures = 0;
 
@@ -114,10 +120,10 @@ void TestEveryComponentType() {
     manager.AddComponent(entity, SpriteComponent{});
     manager.AddComponent(entity, SpawnComponent{});
     manager.AddComponent(entity, CameraComponent{});
-    manager.AddComponent(entity, CameraFollower{});
+    manager.AddComponent(entity, CameraFollowerComponent{});
     manager.AddComponent(entity, InputComponent(entity));
     manager.AddComponent(entity, GravityComponent(Point2D(0.0f, 1.0f)));
-    manager.AddComponent(entity, CameraShake{});
+    manager.AddComponent(entity, CameraShakeComponent{});
     manager.AddComponent(entity, ScoreComponent{});
     manager.AddComponent(entity, RespawnComponent{});
     Check(manager.HasComponent<InputComponent>(entity), "input added");

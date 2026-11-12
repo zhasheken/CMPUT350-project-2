@@ -1,8 +1,6 @@
 #pragma once
 
-#include <unordered_map>
-
-#include "MathUtil.h"
+#include "Entity.h"
 #include "SpriteManager.h"
 
 namespace ECSEngine {
@@ -11,11 +9,9 @@ namespace ECSEngine {
 // This is only defined if an entity also has a LocationComponent.
 class ScoreComponent {
 public:
-    int score;
-    SpriteID digitTextureID[10];
-    EntityID digitID[3];
-
-private:
+    int score{};
+    SpriteID digitTextureID[10]{};
+    EntityID digitID[3]{};
 };
 
 }  // namespace ECSEngine

@@ -4,17 +4,14 @@
 #include <optional>
 #include <vector>
 
-#include "CameraComponent.h"
 #include "CollisionComponent.h"
+#include "Entity.h"
 #include "EntityManager.h"
 #include "InputComponent.h"
 #include "Keyboard.h"
 #include "LocationComponent.h"
 #include "MathUtil.h"
-#include "ScoreComponent.h"
 #include "SoundManager.h"
-#include "SpawnComponent.h"
-#include "SpriteComponent.h"
 #include "SpriteManager.h"
 #include "SystemManager.h"
 #include "WindowManager.h"
