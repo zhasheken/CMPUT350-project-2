@@ -1,34 +1,41 @@
-#include <fstream>
+#include <iostream>
+#include <memory>
+#include <string>
+
+#include "CameraComponent.h"
+#include "CameraFollowerComponent.h"
+#include "CameraShakeComponent.h"
+#include "CollisionComponent.h"
+#include "ECSEngine.h"
+#include "GravityComponent.h"
+#include "InputComponent.h"
+#include "LocationComponent.h"
+#include "MovementComponent.h"
+#include "RespawnComponent.h"
+#include "ScoreComponent.h"
+#include "SpawnComponent.h"
+#include "SpriteComponent.h"
 
 #include "CameraSystem.h"
-#include "CollisionComponent.h"
 #include "CollisionLateSystem.h"
 #include "CollisionSystem.h"
-#include "ECSEngine.h"
-#include "EntityManager.h"
 #include "GravitySystem.h"
-#include "InputComponent.h"
 #include "InputSystem.h"
-#include "LocationComponent.h"
-#include "MathUtil.h"
 #include "MovementSystem.h"
-#include "ScoreComponent.h"
 #include "ScoreSystem.h"
-#include "SpawnComponent.h"
 #include "SpawnSystem.h"
-#include "SpriteComponent.h"
-#include "SpriteManager.h"
 #include "SpriteSystem.h"
 
 std::string gResourcePath = "../assets/";
 #define COMPONENTS                                                                             \
     ECSEngine::LocationComponent, ECSEngine::MovementComponent, ECSEngine::CollisionComponent, \
         ECSEngine::SpriteComponent, ECSEngine::SpawnComponent, ECSEngine::CameraComponent,     \
-        ECSEngine::CameraFollower, ECSEngine::InputComponent, ECSEngine::GravityComponent,     \
-        ECSEngine::CameraShake, ECSEngine::ScoreComponent, ECSEngine::RespawnComponent
+        ECSEngine::CameraFollowerComponent, ECSEngine::InputComponent,                         \
+        ECSEngine::GravityComponent, ECSEngine::CameraShakeComponent, ECSEngine::ScoreComponent, \
+        ECSEngine::RespawnComponent
 using Engine = ECSEngine::ECSEngine<COMPONENTS>;
 
-void LoadMap(Engine& engine, const std::string& path, const std::string& file) {}
+void LoadMap(Engine&, const std::string&, const std::string&) {}
 
 int main(int argc, char* argv[]) {
     if (argc >= 3 && argv[1] == std::string("-path")) {

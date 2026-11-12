@@ -9,7 +9,7 @@ public:
 	const std::string & GetName() const override
 	{ static std::string name("GravitySystem"); return name; }
 	
-	tSystemReturn Run(EngineView<Components...> *engine) override
+	tSystemReturn Run(EngineView<Components...> *) override
 	{
 		return kContinue;
 	}
@@ -18,6 +18,5 @@ public:
 
 
 }
-
 
 
