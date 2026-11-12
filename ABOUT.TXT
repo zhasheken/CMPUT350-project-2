@@ -1,0 +1,21 @@
+Collision box coordinates
+========================
+
+CollisionComponent.collisionBox is stored relative to the entity's top-left
+LocationComponent.loc. CollisionLateSystem snapshots the translated,
+world-space box into CollisionComponent.previousCollisionBox before movement.
+CollisionSystem compares that snapshot with current world-space boxes to
+identify the side of a static obstacle that was hit and correct the entity's
+location.
+
+Star collision behavior
+=======================
+
+A star is a dynamic entity with CollisionComponent, LocationComponent and
+MovementComponent, but without InputComponent. Stars do not receive gravity
+from CollisionSystem; their velocity is supplied by other systems. Static
+obstacle bounces use 0.7 restitution, with speeds below 1 pixel per second
+settled to zero. Star-star collisions separate along the shallowest axis and
+exchange velocity on that axis. Collection requires a ScoreComponent and a
+sound registered as "star". The platformer registers sfx_gem.ogg for this.
+Map loading must avoid placing a spawned star inside a static spawner box.

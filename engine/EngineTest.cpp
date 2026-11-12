@@ -5,6 +5,7 @@
 #include "CameraFollowerComponent.h"
 #include "CameraShakeComponent.h"
 #include "CollisionComponent.h"
+#include "CollisionSystem.h"
 #include "Entity.h"
 #include "EntityManager.h"
 #include "GravityComponent.h"
@@ -135,11 +136,84 @@ void TestEveryComponentType() {
     Check(!manager.GetComponentStorage<GravityComponent>().IsValid(0), "gravity freed with entity");
 }
 
+void TestCollisionGeometry() {
+    CollisionComponent collision{};
+    collision.collisionBox = {{2.0f, 3.0f}, 4.0f, 5.0f};
+    LocationComponent location{Point2D(10.0f, 20.0f)};
+    Rect worldBox = CollisionSystemDetail::WorldBox(collision, location);
+    Check(worldBox.topLeft.x == 12.0f && worldBox.topLeft.y == 23.0f,
+          "collision box is translated into world space");
+    Check(CollisionSystemDetail::Overlaps(worldBox, Rect{{15.0f, 27.0f}, 2.0f, 2.0f}),
+          "overlapping rectangles are detected");
+    Check(!CollisionSystemDetail::Overlaps(worldBox, Rect{{16.0f, 23.0f}, 2.0f, 2.0f}),
+          "touching rectangle edges are not overlap");
+
+    const Rect floor{{0.0f, 10.0f}, 20.0f, 10.0f};
+    const Rect playerAbove{{2.0f, 8.0f}, 4.0f, 4.0f};
+    const Rect previousAbove{{2.0f, 5.0f}, 4.0f, 4.0f};
+    auto landing =
+        CollisionSystemDetail::ResolveOverlap(previousAbove, playerAbove, floor);
+    Check(landing.side == CollisionSystemDetail::Side::top &&
+              landing.correction.y == -2.0f,
+          "landing resolves upward from the obstacle top");
+
+    const Rect wall{{10.0f, 0.0f}, 10.0f, 20.0f};
+    const Rect playerAtWall{{8.0f, 2.0f}, 4.0f, 4.0f};
+    const Rect previousAtWall{{5.0f, 2.0f}, 4.0f, 4.0f};
+    auto wallHit =
+        CollisionSystemDetail::ResolveOverlap(previousAtWall, playerAtWall, wall);
+    Check(wallHit.side == CollisionSystemDetail::Side::left &&
+              wallHit.correction.x == -2.0f,
+          "wall collision resolves toward the previous side");
+
+    const Rect playerBelow{{2.0f, 18.0f}, 4.0f, 4.0f};
+    const Rect previousBelow{{2.0f, 21.0f}, 4.0f, 4.0f};
+    auto ceiling =
+        CollisionSystemDetail::ResolveOverlap(previousBelow, playerBelow, floor);
+    Check(ceiling.side == CollisionSystemDetail::Side::bottom &&
+              ceiling.correction.y == 2.0f,
+          "ceiling collision resolves downward");
+
+    const Rect playerRight{{8.0f, 2.0f}, 4.0f, 4.0f};
+    const Rect previousRight{{21.0f, 2.0f}, 4.0f, 4.0f};
+    auto oppositeWall =
+        CollisionSystemDetail::ResolveOverlap(previousRight, playerRight, wall);
+    Check(oppositeWall.side == CollisionSystemDetail::Side::right &&
+              oppositeWall.correction.x == 12.0f,
+          "opposite wall collision resolves away from the obstacle");
+
+    auto initialOverlap = CollisionSystemDetail::ResolveOverlap(
+        Rect{{5.0f, 5.0f}, 1.0f, 1.0f}, Rect{{8.0f, 3.0f}, 4.0f, 4.0f},
+        Rect{{0.0f, 0.0f}, 10.0f, 10.0f});
+    Check(initialOverlap.side == CollisionSystemDetail::Side::right &&
+              initialOverlap.correction.x == 2.0f,
+          "initial overlap is resolved along the shallowest axis");
+
+    const Rect firstStar{{0.0f, 0.0f}, 4.0f, 4.0f};
+    const Rect secondStar{{3.0f, 1.0f}, 4.0f, 4.0f};
+    const auto starHit =
+        CollisionSystemDetail::ResolveStarOverlap(firstStar, secondStar, 1, 2);
+    Rect separatedFirst = firstStar;
+    Rect separatedSecond = secondStar;
+    separatedFirst.topLeft.x += starHit.correction.x;
+    separatedFirst.topLeft.y += starHit.correction.y;
+    separatedSecond.topLeft.x -= starHit.correction.x;
+    separatedSecond.topLeft.y -= starHit.correction.y;
+    Check(starHit.axis == CollisionSystemDetail::Axis::horizontal &&
+              !CollisionSystemDetail::Overlaps(separatedFirst, separatedSecond),
+          "star collision separates along the shallowest axis");
+    Check(CollisionSystemDetail::BounceVelocity(10.0f) == -7.0f,
+          "star bounce reflects and reduces speed");
+    Check(CollisionSystemDetail::BounceVelocity(1.0f) == 0.0f,
+          "small star bounce velocity settles to zero");
+}
+
 int main() {
     TestCreateAndRemove();
     TestIteration();
     TestComponents();
     TestEveryComponentType();
+    TestCollisionGeometry();
 
     if (gFailures > 0) {
         std::cout << gFailures << " EntityManager test(s) failed\n";
