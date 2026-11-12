@@ -3,6 +3,7 @@
 
 #include "CameraComponent.h"
 #include "CameraFollowerComponent.h"
+#include "CameraSystem.h"
 #include "CameraShakeComponent.h"
 #include "CollisionComponent.h"
 #include "CollisionSystem.h"
@@ -10,6 +11,7 @@
 #include "EntityManager.h"
 #include "GravityComponent.h"
 #include "InputComponent.h"
+#include "InputSystem.h"
 #include "LocationComponent.h"
 #include "MovementComponent.h"
 #include "RespawnComponent.h"
@@ -208,12 +210,80 @@ void TestCollisionGeometry() {
           "small star bounce velocity settles to zero");
 }
 
+void TestInputHelpers() {
+    InputComponent input(0);
+    MovementComponent movement{};
+    input.keydown[Key::Right] = true;
+    InputSystemDetail::ApplyHorizontalInput(movement, input, true);
+    Check(movement.velocity.x == kGroundRunAcceleration,
+          "ground movement accelerates at the ground rate");
+
+    movement.velocity.x = 0.0f;
+    InputSystemDetail::ApplyHorizontalInput(movement, input, false);
+    Check(movement.velocity.x == kAirRunAcceleration,
+          "air movement accelerates at the air rate");
+
+    movement.velocity.x = kMaxRunVelocity - 1.0f;
+    InputSystemDetail::ApplyHorizontalInput(movement, input, true);
+    Check(movement.velocity.x == kMaxRunVelocity, "run speed is capped");
+
+    input.keydown.reset();
+    movement.velocity.x = kGroundRunAcceleration;
+    InputSystemDetail::ApplyHorizontalInput(movement, input, true);
+    Check(movement.velocity.x == 0.0f, "horizontal speed decelerates without input");
+
+    input.lastKeydown[Key::Z] = false;
+    input.keydown[Key::Z] = true;
+    Check(InputSystemDetail::WasPressed(input, Key::Z), "jump press edge is detected");
+    input.lastKeydown[Key::Z] = true;
+    input.keydown[Key::Z] = false;
+    Check(InputSystemDetail::WasReleased(input, Key::Z), "jump release edge is detected");
+
+    input.keydown[Key::Left] = true;
+    movement.velocity.x = 0.0f;
+    Check(InputSystemDetail::DashDirection(input, movement) == -1,
+          "dash follows the held horizontal direction");
+    input.keydown.reset();
+    movement.velocity.x = -1.0f;
+    Check(InputSystemDetail::DashDirection(input, movement) == -1,
+          "dash uses the current direction when no direction key is held");
+    Check(kDashInterval == 60, "dash cooldown lasts one second at 60 frames per second");
+}
+
+void TestCameraHelpers() {
+    using namespace CameraSystemDetail;
+
+    Check(TrackHorizontalPosition(0.0f, 0.0f, 1.0f, 1000.0f, 0.1f) == 0.0f,
+          "camera remains still while the target is in the center 40 percent");
+
+    const float softFollow = TrackHorizontalPosition(0.0f, -300.0f, 1.0f, 1000.0f, 0.1f);
+    Check(softFollow < 0.0f && softFollow > -200.0f,
+          "camera smoothly follows in the soft margin");
+
+    const float hardFollow = TrackHorizontalPosition(0.0f, -450.0f, 1.0f, 1000.0f, 0.1f);
+    const float hardTargetScreenX = 500.0f + (-450.0f - hardFollow);
+    Check(hardTargetScreenX == 100.0f,
+          "hard tracking keeps the target out of the outer ten percent");
+
+    CameraShakeComponent shake{2, Point2D(3.0f, 4.0f)};
+    const Point2D firstOffset = AdvanceShake(shake);
+    const Point2D secondOffset = AdvanceShake(shake);
+    const Point2D stoppedOffset = AdvanceShake(shake);
+    Check(firstOffset.x == 3.0f && firstOffset.y == 4.0f &&
+              secondOffset.x == -3.0f && secondOffset.y == -4.0f,
+          "camera shake alternates its offset");
+    Check(shake.frameLimit == 0 && stoppedOffset.x == 0.0f && stoppedOffset.y == 0.0f,
+          "camera shake expires after its frame limit");
+}
+
 int main() {
     TestCreateAndRemove();
     TestIteration();
     TestComponents();
     TestEveryComponentType();
     TestCollisionGeometry();
+    TestInputHelpers();
+    TestCameraHelpers();
 
     if (gFailures > 0) {
         std::cout << gFailures << " EntityManager test(s) failed\n";

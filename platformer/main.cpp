@@ -50,6 +50,8 @@ int main(int argc, char* argv[]) {
     // Load sounds
     engine.GetSoundManager().RegisterSound(gResourcePath + "footstep_grass_003.ogg", "land");
     engine.GetSoundManager().RegisterSound(gResourcePath + "sfx_gem.ogg", "star");
+    engine.GetSoundManager().RegisterSound(gResourcePath + "sfx_jump.ogg", "jump");
+    engine.GetSoundManager().RegisterSound(gResourcePath + "footstep_snow_001.ogg", "wallSlide");
 
     // Load maps
 

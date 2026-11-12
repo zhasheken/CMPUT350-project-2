@@ -19,3 +19,13 @@ settled to zero. Star-star collisions separate along the shallowest axis and
 exchange velocity on that axis. Collection requires a ScoreComponent and a
 sound registered as "star". The platformer registers sfx_gem.ogg for this.
 Map loading must avoid placing a spawned star inside a static spawner box.
+
+Input controls
+==============
+
+Horizontal input accelerates toward a capped run speed, with separate ground
+and air acceleration; releasing both direction keys decelerates toward rest.
+Jump and dash are press-triggered. Releasing jump while rising cuts upward
+velocity. The dash cooldown is 60 InputSystem updates (one second at 60 FPS).
+The wall-slide cue uses the available footstep_snow_001.ogg asset because no
+dedicated wall-slide sound is present.
