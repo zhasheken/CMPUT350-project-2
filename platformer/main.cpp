@@ -201,10 +201,45 @@ int main(int argc, char* argv[]) {
     LoadMap(engine, gResourcePath, "world.map");
 
     // Place player
+    ECSEngine::EntityManager<COMPONENTS>& entities = engine.GetEntityManager();
+    ECSEngine::EntityID player = entities.CreateEntity("player");
+
+    // first character in the sheet
+    ECSEngine::Rect playerSource{ECSEngine::Point2D(0, 0), 128, 128};
+    ECSEngine::SpriteID playerSprite = engine.GetSpriteManager().RegisterTexture(
+        gResourcePath + "spritesheet-characters-default.png", playerSource);
+    AddWorldLocationAndSprite(engine, player, 13 * 64, 4 * 64, playerSprite, 64, 64);
+
+    // box around the body only
+    ECSEngine::CollisionComponent playerCollision;
+    playerCollision.collisionBox = ECSEngine::Rect{ECSEngine::Point2D(12, 13), 42, 51};
+    entities.AddComponent(player, playerCollision);
+
+    ECSEngine::MovementComponent playerMovement;
+    entities.AddComponent(player, playerMovement);
+
+    ECSEngine::InputComponent playerInput(player);
+    entities.AddComponent(player, playerInput);
+
+    ECSEngine::GravityComponent playerGravity(ECSEngine::Point2D(0, 1));
+    entities.AddComponent(player, playerGravity);
 
     // Setup score component
 
     // Setup Camera
+    ECSEngine::EntityID camera = entities.CreateEntity("camera");
+
+    // start on the current view
+    ECSEngine::CameraComponent cameraComponent;
+    cameraComponent.position = ECSEngine::Point2D(512, 384);
+    cameraComponent.worldUnitsPerPixel = 1.0f;
+    cameraComponent.speed = 0.1f;
+    entities.AddComponent(camera, cameraComponent);
+
+    // follow the player
+    ECSEngine::CameraFollowerComponent follower;
+    follower.entityID = player;
+    entities.AddComponent(camera, follower);
 
     // Add all systems
     auto& sm = engine.GetSystemManager();
