@@ -171,6 +171,11 @@ void LoadMap(Engine& engine, const std::string& resourcePath, const std::string&
                 AddSolidObstacleCollision(engine, tile, boundingBoxes[symbol]);
             }
 
+            // spikes hurt the player
+            if (dictionaryType == 2 && symbol == 'x') {
+                entities.GetComponent<ECSEngine::CollisionComponent>(tile).doesDamage = 1;
+            }
+
             // spawners create stars
             if (symbol == 'S') {
                 AddStarSpawn(engine, tile, resourcePath);
@@ -254,6 +259,11 @@ int main(int argc, char* argv[]) {
 
     ECSEngine::GravityComponent playerGravity(ECSEngine::Point2D(0, 1));
     entities.AddComponent(player, playerGravity);
+
+    // respawn where the player starts
+    ECSEngine::RespawnComponent playerRespawn;
+    playerRespawn.loc = entities.GetComponent<ECSEngine::LocationComponent>(player).loc;
+    entities.AddComponent(player, playerRespawn);
 
     // Setup score component
     ECSEngine::ScoreComponent score;
