@@ -7,32 +7,31 @@
 #include "CameraComponent.h"
 #include "CameraFollowerComponent.h"
 #include "CameraShakeComponent.h"
-#include "CollisionComponent.h"
-#include "ECSEngine.h"
-#include "GravityComponent.h"
-#include "InputComponent.h"
-#include "LocationComponent.h"
-#include "MovementComponent.h"
-#include "RespawnComponent.h"
-#include "ScoreComponent.h"
-#include "SpawnComponent.h"
-#include "SpriteComponent.h"
-
 #include "CameraSystem.h"
+#include "CollisionComponent.h"
 #include "CollisionLateSystem.h"
 #include "CollisionSystem.h"
+#include "ECSEngine.h"
+#include "GravityComponent.h"
 #include "GravitySystem.h"
+#include "InputComponent.h"
 #include "InputSystem.h"
+#include "LocationComponent.h"
+#include "MovementComponent.h"
 #include "MovementSystem.h"
+#include "RespawnComponent.h"
+#include "ScoreComponent.h"
 #include "ScoreSystem.h"
+#include "SpawnComponent.h"
 #include "SpawnSystem.h"
+#include "SpriteComponent.h"
 #include "SpriteSystem.h"
 
 std::string gResourcePath = "../assets/";
-#define COMPONENTS                                                                             \
-    ECSEngine::LocationComponent, ECSEngine::MovementComponent, ECSEngine::CollisionComponent, \
-        ECSEngine::SpriteComponent, ECSEngine::SpawnComponent, ECSEngine::CameraComponent,     \
-        ECSEngine::CameraFollowerComponent, ECSEngine::InputComponent,                         \
+#define COMPONENTS                                                                               \
+    ECSEngine::LocationComponent, ECSEngine::MovementComponent, ECSEngine::CollisionComponent,   \
+        ECSEngine::SpriteComponent, ECSEngine::SpawnComponent, ECSEngine::CameraComponent,       \
+        ECSEngine::CameraFollowerComponent, ECSEngine::InputComponent,                           \
         ECSEngine::GravityComponent, ECSEngine::CameraShakeComponent, ECSEngine::ScoreComponent, \
         ECSEngine::RespawnComponent
 using Engine = ECSEngine::ECSEngine<COMPONENTS>;
@@ -180,6 +179,38 @@ void LoadMap(Engine& engine, const std::string& resourcePath, const std::string&
     }
 }
 
+// load the 0 to 9 sprites
+void RegisterDigitSprites(Engine& engine, ECSEngine::ScoreComponent& score) {
+    for (int digit = 0; digit < 10; digit++) {
+        // digits run upward from 0
+        ECSEngine::Rect digitSpriteRect{ECSEngine::Point2D(832, 832 - digit * 64), 64, 64};
+        score.digitTextureID[digit] = engine.GetSpriteManager().RegisterTexture(
+            gResourcePath + "spritesheet-tiles-default.png", digitSpriteRect);
+    }
+}
+
+// one digit fixed on screen
+ECSEngine::EntityID CreateDigitDisplay(Engine& engine, float x, float y,
+                                       ECSEngine::SpriteID startingDigitSprite) {
+    ECSEngine::EntityManager<COMPONENTS>& entities = engine.GetEntityManager();
+    ECSEngine::EntityID digitDisplayID = entities.CreateEntity("digit");
+
+    ECSEngine::LocationComponent digitLocation;
+    digitLocation.loc.x = x;
+    digitLocation.loc.y = y;
+    entities.AddComponent(digitDisplayID, digitLocation);
+
+    // screen space ignores the camera
+    ECSEngine::SpriteComponent digitDisplaySprite;
+    digitDisplaySprite.textureID = startingDigitSprite;
+    digitDisplaySprite.bounds.width = 48;
+    digitDisplaySprite.bounds.height = 48;
+    digitDisplaySprite.worldSpace = false;
+    entities.AddComponent(digitDisplayID, digitDisplaySprite);
+
+    return digitDisplayID;
+}
+
 int main(int argc, char* argv[]) {
     if (argc >= 3 && argv[1] == std::string("-path")) {
         gResourcePath = argv[2];
@@ -225,6 +256,17 @@ int main(int argc, char* argv[]) {
     entities.AddComponent(player, playerGravity);
 
     // Setup score component
+    ECSEngine::ScoreComponent score;
+    RegisterDigitSprites(engine, score);
+
+    // three digits in the top-left
+    for (int digitIndex = 0; digitIndex < 3; digitIndex++) {
+        float digitX = 16 + digitIndex * 30;
+        score.digitID[digitIndex] = CreateDigitDisplay(engine, digitX, 16, score.digitTextureID[0]);
+    }
+
+    ECSEngine::EntityID scoreEntity = entities.CreateEntity("score");
+    entities.AddComponent(scoreEntity, score);
 
     // Setup Camera
     ECSEngine::EntityID camera = entities.CreateEntity("camera");
