@@ -3,12 +3,15 @@
 
 #include "CameraComponent.h"
 #include "CameraFollowerComponent.h"
+#include "CameraSystem.h"
 #include "CameraShakeComponent.h"
 #include "CollisionComponent.h"
+#include "CollisionSystem.h"
 #include "Entity.h"
 #include "EntityManager.h"
 #include "GravityComponent.h"
 #include "InputComponent.h"
+#include "InputSystem.h"
 #include "LocationComponent.h"
 #include "MovementComponent.h"
 #include "RespawnComponent.h"
@@ -135,11 +138,152 @@ void TestEveryComponentType() {
     Check(!manager.GetComponentStorage<GravityComponent>().IsValid(0), "gravity freed with entity");
 }
 
+void TestCollisionGeometry() {
+    CollisionComponent collision{};
+    collision.collisionBox = {{2.0f, 3.0f}, 4.0f, 5.0f};
+    LocationComponent location{Point2D(10.0f, 20.0f)};
+    Rect worldBox = CollisionSystemDetail::WorldBox(collision, location);
+    Check(worldBox.topLeft.x == 12.0f && worldBox.topLeft.y == 23.0f,
+          "collision box is translated into world space");
+    Check(CollisionSystemDetail::Overlaps(worldBox, Rect{{15.0f, 27.0f}, 2.0f, 2.0f}),
+          "overlapping rectangles are detected");
+    Check(!CollisionSystemDetail::Overlaps(worldBox, Rect{{16.0f, 23.0f}, 2.0f, 2.0f}),
+          "touching rectangle edges are not overlap");
+
+    const Rect floor{{0.0f, 10.0f}, 20.0f, 10.0f};
+    const Rect playerAbove{{2.0f, 8.0f}, 4.0f, 4.0f};
+    const Rect previousAbove{{2.0f, 5.0f}, 4.0f, 4.0f};
+    auto landing =
+        CollisionSystemDetail::ResolveOverlap(previousAbove, playerAbove, floor);
+    Check(landing.side == CollisionSystemDetail::Side::top &&
+              landing.correction.y == -2.0f,
+          "landing resolves upward from the obstacle top");
+
+    const Rect wall{{10.0f, 0.0f}, 10.0f, 20.0f};
+    const Rect playerAtWall{{8.0f, 2.0f}, 4.0f, 4.0f};
+    const Rect previousAtWall{{5.0f, 2.0f}, 4.0f, 4.0f};
+    auto wallHit =
+        CollisionSystemDetail::ResolveOverlap(previousAtWall, playerAtWall, wall);
+    Check(wallHit.side == CollisionSystemDetail::Side::left &&
+              wallHit.correction.x == -2.0f,
+          "wall collision resolves toward the previous side");
+
+    const Rect playerBelow{{2.0f, 18.0f}, 4.0f, 4.0f};
+    const Rect previousBelow{{2.0f, 21.0f}, 4.0f, 4.0f};
+    auto ceiling =
+        CollisionSystemDetail::ResolveOverlap(previousBelow, playerBelow, floor);
+    Check(ceiling.side == CollisionSystemDetail::Side::bottom &&
+              ceiling.correction.y == 2.0f,
+          "ceiling collision resolves downward");
+
+    const Rect playerRight{{8.0f, 2.0f}, 4.0f, 4.0f};
+    const Rect previousRight{{21.0f, 2.0f}, 4.0f, 4.0f};
+    auto oppositeWall =
+        CollisionSystemDetail::ResolveOverlap(previousRight, playerRight, wall);
+    Check(oppositeWall.side == CollisionSystemDetail::Side::right &&
+              oppositeWall.correction.x == 12.0f,
+          "opposite wall collision resolves away from the obstacle");
+
+    auto initialOverlap = CollisionSystemDetail::ResolveOverlap(
+        Rect{{5.0f, 5.0f}, 1.0f, 1.0f}, Rect{{8.0f, 3.0f}, 4.0f, 4.0f},
+        Rect{{0.0f, 0.0f}, 10.0f, 10.0f});
+    Check(initialOverlap.side == CollisionSystemDetail::Side::right &&
+              initialOverlap.correction.x == 2.0f,
+          "initial overlap is resolved along the shallowest axis");
+
+    const Rect firstStar{{0.0f, 0.0f}, 4.0f, 4.0f};
+    const Rect secondStar{{3.0f, 1.0f}, 4.0f, 4.0f};
+    const auto starHit =
+        CollisionSystemDetail::ResolveStarOverlap(firstStar, secondStar, 1, 2);
+    Rect separatedFirst = firstStar;
+    Rect separatedSecond = secondStar;
+    separatedFirst.topLeft.x += starHit.correction.x;
+    separatedFirst.topLeft.y += starHit.correction.y;
+    separatedSecond.topLeft.x -= starHit.correction.x;
+    separatedSecond.topLeft.y -= starHit.correction.y;
+    Check(starHit.axis == CollisionSystemDetail::Axis::horizontal &&
+              !CollisionSystemDetail::Overlaps(separatedFirst, separatedSecond),
+          "star collision separates along the shallowest axis");
+    Check(CollisionSystemDetail::BounceVelocity(10.0f) == -7.0f,
+          "star bounce reflects and reduces speed");
+    Check(CollisionSystemDetail::BounceVelocity(1.0f) == 0.0f,
+          "small star bounce velocity settles to zero");
+}
+
+void TestInputHelpers() {
+    InputComponent input(0);
+    MovementComponent movement{};
+    input.keydown[Key::Right] = true;
+    InputSystemDetail::ApplyHorizontalInput(movement, input, true);
+    Check(movement.velocity.x == kGroundRunAcceleration,
+          "ground movement accelerates at the ground rate");
+
+    movement.velocity.x = 0.0f;
+    InputSystemDetail::ApplyHorizontalInput(movement, input, false);
+    Check(movement.velocity.x == kAirRunAcceleration,
+          "air movement accelerates at the air rate");
+
+    movement.velocity.x = kMaxRunVelocity - 1.0f;
+    InputSystemDetail::ApplyHorizontalInput(movement, input, true);
+    Check(movement.velocity.x == kMaxRunVelocity, "run speed is capped");
+
+    input.keydown.reset();
+    movement.velocity.x = kGroundRunAcceleration;
+    InputSystemDetail::ApplyHorizontalInput(movement, input, true);
+    Check(movement.velocity.x == 0.0f, "horizontal speed decelerates without input");
+
+    input.lastKeydown[Key::Z] = false;
+    input.keydown[Key::Z] = true;
+    Check(InputSystemDetail::WasPressed(input, Key::Z), "jump press edge is detected");
+    input.lastKeydown[Key::Z] = true;
+    input.keydown[Key::Z] = false;
+    Check(InputSystemDetail::WasReleased(input, Key::Z), "jump release edge is detected");
+
+    input.keydown[Key::Left] = true;
+    movement.velocity.x = 0.0f;
+    Check(InputSystemDetail::DashDirection(input, movement) == -1,
+          "dash follows the held horizontal direction");
+    input.keydown.reset();
+    movement.velocity.x = -1.0f;
+    Check(InputSystemDetail::DashDirection(input, movement) == -1,
+          "dash uses the current direction when no direction key is held");
+    Check(kDashInterval == 60, "dash cooldown lasts one second at 60 frames per second");
+}
+
+void TestCameraHelpers() {
+    using namespace CameraSystemDetail;
+
+    Check(TrackHorizontalPosition(0.0f, 0.0f, 1.0f, 1000.0f, 0.1f) == 0.0f,
+          "camera remains still while the target is in the center 40 percent");
+
+    const float softFollow = TrackHorizontalPosition(0.0f, -300.0f, 1.0f, 1000.0f, 0.1f);
+    Check(softFollow < 0.0f && softFollow > -200.0f,
+          "camera smoothly follows in the soft margin");
+
+    const float hardFollow = TrackHorizontalPosition(0.0f, -450.0f, 1.0f, 1000.0f, 0.1f);
+    const float hardTargetScreenX = 500.0f + (-450.0f - hardFollow);
+    Check(hardTargetScreenX == 100.0f,
+          "hard tracking keeps the target out of the outer ten percent");
+
+    CameraShakeComponent shake{2, Point2D(3.0f, 4.0f)};
+    const Point2D firstOffset = AdvanceShake(shake);
+    const Point2D secondOffset = AdvanceShake(shake);
+    const Point2D stoppedOffset = AdvanceShake(shake);
+    Check(firstOffset.x == 3.0f && firstOffset.y == 4.0f &&
+              secondOffset.x == -3.0f && secondOffset.y == -4.0f,
+          "camera shake alternates its offset");
+    Check(shake.frameLimit == 0 && stoppedOffset.x == 0.0f && stoppedOffset.y == 0.0f,
+          "camera shake expires after its frame limit");
+}
+
 int main() {
     TestCreateAndRemove();
     TestIteration();
     TestComponents();
     TestEveryComponentType();
+    TestCollisionGeometry();
+    TestInputHelpers();
+    TestCameraHelpers();
 
     if (gFailures > 0) {
         std::cout << gFailures << " EntityManager test(s) failed\n";
