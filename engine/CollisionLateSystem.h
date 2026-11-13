@@ -31,6 +31,7 @@ public:
                 entities.template GetComponent<CollisionComponent>(id);
             const LocationComponent& location =
                 entities.template GetComponent<LocationComponent>(id);
+            // collisionBox is local; previousCollisionBox is a world space snapshot.
             Rect previousBox = collision.collisionBox;
             previousBox.topLeft.x += location.loc.x;
             previousBox.topLeft.y += location.loc.y;

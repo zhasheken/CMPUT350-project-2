@@ -13,8 +13,8 @@ struct CollisionComponent {
     std::uint8_t onCeiling : 1 = 0;
     std::uint8_t onLeftWall : 1 = 0;
     std::uint8_t onRightWall : 1 = 0;
-    Rect collisionBox{};          // The bounding box for collision detection
-    Rect previousCollisionBox{};  // The previous bounding box for collision detection
+    Rect collisionBox{};  // Bounding box relative to LocationComponent::loc
+    Rect previousCollisionBox{};  // World space box captured before movement
 };
 
 }  // namespace ECSEngine
