@@ -1,3 +1,4 @@
+#include <cmath>
 #include <iostream>
 #include <string>
 
@@ -17,6 +18,7 @@
 #include "RespawnComponent.h"
 #include "ScoreComponent.h"
 #include "SpawnComponent.h"
+#include "SpawnSystem.h"
 #include "SpriteComponent.h"
 
 using namespace ECSEngine;
@@ -276,6 +278,41 @@ void TestCameraHelpers() {
           "camera shake expires after its frame limit");
 }
 
+void TestSpawnStar() {
+    TestManager entities;
+    const EntityID spawnerID = entities.CreateEntity("spawner");
+    entities.AddComponent(spawnerID, LocationComponent{Point2D(100.0f, 200.0f)});
+
+    CollisionComponent spawnerCollision{};
+    spawnerCollision.staticEntity = 1;
+    spawnerCollision.collisionBox = Rect{Point2D(0.0f, 0.0f), 64.0f, 64.0f};
+    entities.AddComponent(spawnerID, spawnerCollision);
+
+    std::mt19937 randomGenerator(42);
+    const SpawnSystemDetail::SpawnRequest request{spawnerID, 17};
+    Check(SpawnSystemDetail::SpawnStar(entities, request, randomGenerator, 64.0f, 64.0f),
+          "star is created for a valid spawner");
+
+    const EntityID starID = 1;
+    Check(entities.IsEntityIDValid(starID), "spawned star entity is valid");
+    Check(entities.GetComponent<LocationComponent>(starID).loc.x == 100.0f &&
+              entities.GetComponent<LocationComponent>(starID).loc.y == 136.0f,
+          "star starts immediately above the spawner collision");
+    Check(!entities.GetComponent<CollisionComponent>(starID).staticEntity,
+          "spawned star is dynamic");
+    Check(entities.GetComponent<CollisionComponent>(starID).previousCollisionBox.topLeft.y ==
+              136.0f,
+          "spawned star starts with a world-space previous collision box");
+    Check(entities.GetComponent<SpriteComponent>(starID).textureID == 17 &&
+              entities.GetComponent<SpriteComponent>(starID).worldSpace,
+          "spawned star uses its configured world space sprite");
+    const Point2D velocity = entities.GetComponent<MovementComponent>(starID).velocity;
+    Check(std::abs(std::sqrt(velocity.x * velocity.x + velocity.y * velocity.y) - 15.0f) <
+              0.001f,
+          "spawned star receives a fixed-speed random direction");
+    Check(velocity.y <= 0.0f, "spawned star initially launches upward");
+}
+
 int main() {
     TestCreateAndRemove();
     TestIteration();
@@ -284,6 +321,7 @@ int main() {
     TestCollisionGeometry();
     TestInputHelpers();
     TestCameraHelpers();
+    TestSpawnStar();
 
     if (gFailures > 0) {
         std::cout << gFailures << " EntityManager test(s) failed\n";

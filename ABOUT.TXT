@@ -19,6 +19,9 @@ settled to zero. Star-star collisions separate along the shallowest axis and
 exchange velocity on that axis. Collection requires a ScoreComponent and a
 sound registered as "star". The platformer registers sfx_gem.ogg for this.
 Map loading must avoid placing a spawned star inside a static spawner box.
+The same component combination identifies spawned stars; no separate tag is
+used. Spawned stars launch upward at 15 pixels per frame and use the registered
+sprite source rectangle dimensions for their world-space bounds.
 
 Input controls
 ==============
