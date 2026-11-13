@@ -11,6 +11,7 @@ struct InputComponent {
     InputComponent(EntityID whichEntity) : entity(whichEntity) {}
     EntityID entity{};
     int lastDash{};
+    bool wallSliding{};
     std::bitset<Key::ScanCount> keydown{};
     std::bitset<Key::ScanCount> lastKeydown{};
 };

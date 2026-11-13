@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CollisionComponent.h"
+#include "Entity.h"
 #include "EntityManager.h"
 #include "LocationComponent.h"
 #include "SystemManager.h"
@@ -16,25 +17,27 @@ public:
     }
 
     tSystemReturn Run(EngineView<Components...>* engine) override {
-        EntityManager<Components...>& entities = engine->GetEntityManager();
-        ComponentStorage<CollisionComponent>& collisions =
-            entities.template GetComponentStorage<CollisionComponent>();
+        auto& entities = engine->GetEntityManager();
 
-        // save boxes before anything moves
-        for (size_t i = 0; i < collisions.Size(); i++) {
-            if (!collisions.IsValid(i)) {
+        for (const Entity& entity : entities) {
+            const EntityID id = entity.GetID();
+            if (!entities.IsEntityIDValid(id) ||
+                !entities.template HasComponent<CollisionComponent>(id) ||
+                !entities.template HasComponent<LocationComponent>(id)) {
                 continue;
             }
 
-            EntityID owner = collisions.GetOwner(i);
-            Point2D location = entities.template GetComponent<LocationComponent>(owner).loc;
-            CollisionComponent& collision = collisions.Get(i);
-
-            // store it in world coordinates
-            collision.previousCollisionBox = collision.collisionBox;
-            collision.previousCollisionBox.topLeft.x += location.x;
-            collision.previousCollisionBox.topLeft.y += location.y;
+            const CollisionComponent& collision =
+                entities.template GetComponent<CollisionComponent>(id);
+            const LocationComponent& location =
+                entities.template GetComponent<LocationComponent>(id);
+            Rect previousBox = collision.collisionBox;
+            previousBox.topLeft.x += location.loc.x;
+            previousBox.topLeft.y += location.loc.y;
+            entities.template GetComponent<CollisionComponent>(id).previousCollisionBox =
+                previousBox;
         }
+
         return kContinue;
     }
 };
