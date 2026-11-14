@@ -74,9 +74,18 @@ AI assistance disclosure
 
 AI assistance was used to implement or refine player input, collision, understadning of 
 camera following and shake, Focused tests for those behaviors were also AI-assisted. 
-The corresponding source sections contain comments identifying the issue and 
-pointing here. AI assisted changes required human review; the team remains responsible 
-for understanding and verifying every submitted file.
+
+Prompt: “The wall jump feels weird because it pushes me away from the wall before I press anything and its hard to jump off. Help me implement coyote time, please give me a simple step by step.”
+Reflection: This was successful because not having coyote time made wall jumps difficult. The code was short and easy to follow. 
+One downside was that wall jumps could go further, so we had to retune the movement so the second set of spikes still needs a dash
+but this helped guide the movement in the right direction.
+
+Prompt: “Walk me through implementing the component storage and entity manager parts of the engine step by step, in a simple beginner-friendly style that follows the spec as follows [pasted spec]”
+Reflection: This helped me understand how entities, component storage and the index table fit together, and how to add, remove and look up components.
+
+Prompt: “Help me finish the engine loop: processing SFML events into the input component, running the systems, and drawing debug collision boxes.”
+Reflection: This helped me understand how key presses get into the input component and how the debug, pause and step keys work. The first version used things I didn’t understand but further chats simplified the loop into steps I could understand much better.
+
 
 Team contributions
 ------------------

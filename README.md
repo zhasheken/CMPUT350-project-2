@@ -76,18 +76,6 @@ The order is significant: the collision snapshot must precede movement, and coll
 | `P` | Pause / resume |
 | `N` | Advance one frame while paused |
 
-### Known limitation: spikes
-
-The map loader currently treats dictionary-2 tiles as solid but does not mark spike tiles with `CollisionComponent.doesDamage`, and `CollisionSystem` does not yet use `RespawnComponent` for a special spike response. Spike behavior still needs to be implemented and play-tested if it is required by the final platformer specification.
-
----
-
-## AI Assistance Disclosure
-
-AI assistance was used to implement or refine player input, collision, understanding of camera following and shake. Focused tests for those behaviors were also AI-assisted. The corresponding source sections contain comments identifying the issue and pointing here.
-
-AI-assisted changes required human review; the team remains responsible for understanding and verifying every submitted file.
-
 ---
 
 ## Team Contributions
