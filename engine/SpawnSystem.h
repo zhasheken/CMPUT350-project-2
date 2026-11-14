@@ -80,7 +80,6 @@ bool SpawnStar(EntityManager<Components...>& entities, const SpawnRequest& reque
     MovementComponent movement{};
     movement.velocity = velocity;
     entities.AddComponent(starID, movement);
-    entities.AddComponent(starID, GravityComponent(Point2D(0.0f, 1.0f)));
 
     CollisionComponent collision{};
     collision.collisionBox = starCollisionBox;
