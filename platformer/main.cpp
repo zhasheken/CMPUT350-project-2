@@ -231,6 +231,7 @@ int main(int argc, char* argv[]) {
     engine.GetSoundManager().RegisterSound(gResourcePath + "sfx_gem.ogg", "star");
     engine.GetSoundManager().RegisterSound(gResourcePath + "sfx_jump.ogg", "jump");
     engine.GetSoundManager().RegisterSound(gResourcePath + "footstep_snow_001.ogg", "wallSlide");
+    engine.GetSoundManager().RegisterSound(gResourcePath + "error_008.ogg", "spike");
 
     // Load maps
     LoadMap(engine, gResourcePath, "sky.map");
@@ -248,7 +249,7 @@ int main(int argc, char* argv[]) {
 
     // box around the body only
     ECSEngine::CollisionComponent playerCollision;
-    playerCollision.collisionBox = ECSEngine::Rect{ECSEngine::Point2D(12, 13), 42, 51};
+    playerCollision.collisionBox = ECSEngine::Rect{ECSEngine::Point2D(14, 15), 36, 48};
     entities.AddComponent(player, playerCollision);
 
     ECSEngine::MovementComponent playerMovement;
