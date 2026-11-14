@@ -257,7 +257,7 @@ int main(int argc, char* argv[]) {
     ECSEngine::InputComponent playerInput(player);
     entities.AddComponent(player, playerInput);
 
-    ECSEngine::GravityComponent playerGravity(ECSEngine::Point2D(0, 1));
+    ECSEngine::GravityComponent playerGravity(ECSEngine::Point2D(0.0f, 0.7f));
     entities.AddComponent(player, playerGravity);
 
     // respawn where the player starts

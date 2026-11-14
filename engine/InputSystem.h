@@ -13,12 +13,13 @@
 
 namespace ECSEngine {
 
-inline constexpr float kMaxRunVelocity = 15.0f;
-inline constexpr float kDashVelocity = 50.0f;
-inline constexpr float kJumpVelocity = 25.0f;
-inline constexpr float kGroundRunAcceleration = 5.0f;
-inline constexpr float kAirRunAcceleration = 4.0f;
+inline constexpr float kMaxRunVelocity = 7.0f;
+inline constexpr float kDashVelocity = 40.0f;
+inline constexpr float kJumpVelocity = 18.0f;
+inline constexpr float kGroundRunAcceleration = 4.0f;
+inline constexpr float kAirRunAcceleration = 3.0f;
 inline constexpr int kDashInterval = 60;
+inline constexpr int kWallCoyoteFrames = 6;
 
 namespace InputSystemDetail {
 
@@ -32,6 +33,11 @@ inline float Approach(float value, float target, float amount) {
 inline int HorizontalDirection(const InputComponent& input) {
     const bool left = input.keydown[Key::Left];
     const bool right = input.keydown[Key::Right];
+
+    // both held, newest press wins
+    if (left && right) {
+        return input.lastHorizontalPress;
+    }
     return static_cast<int>(right) - static_cast<int>(left);
 }
 
@@ -89,8 +95,32 @@ public:
                 collision = &entities.template GetComponent<CollisionComponent>(id);
             }
 
+            // remember the newest arrow press
+            if (WasPressed(input, Key::Left)) {
+                input.lastHorizontalPress = -1;
+            }
+            if (WasPressed(input, Key::Right)) {
+                input.lastHorizontalPress = 1;
+            }
+
             const bool onGround = collision != nullptr && collision->onGround;
             ApplyHorizontalInput(movement, input, onGround);
+
+            // remember the wall briefly
+            const bool onWall =
+                collision != nullptr && (collision->onLeftWall || collision->onRightWall);
+            if (onGround) {
+                input.wallCoyote = 0;
+            } else if (onWall && movement.velocity.y > 0.0f) {
+                input.wallCoyote = kWallCoyoteFrames;
+                if (collision->onLeftWall) {
+                    input.wallSide = -1;
+                } else {
+                    input.wallSide = 1;
+                }
+            } else if (input.wallCoyote > 0) {
+                --input.wallCoyote;
+            }
 
             if (input.lastDash > 0) {
                 --input.lastDash;
@@ -104,11 +134,11 @@ public:
                 if (collision->onGround) {
                     movement.velocity.y = -kJumpVelocity;
                     engine->GetSoundManager().GetSound("jump").play();
-                } else if (movement.velocity.y > 0.0f &&
-                           (collision->onLeftWall || collision->onRightWall)) {
+                } else if (input.wallCoyote > 0) {
+                    // push away from the wall
                     movement.velocity.y = -kJumpVelocity;
-                    movement.velocity.x =
-                        collision->onLeftWall ? kMaxRunVelocity : -kMaxRunVelocity;
+                    movement.velocity.x = static_cast<float>(-input.wallSide) * kMaxRunVelocity;
+                    input.wallCoyote = 0;
                     engine->GetSoundManager().GetSound("jump").play();
                 }
             }
@@ -117,6 +147,11 @@ public:
                 movement.velocity.x =
                     static_cast<float>(DashDirection(input, movement)) * kDashVelocity;
                 input.lastDash = kDashInterval;
+
+                // stop falling when dashing
+                if (movement.velocity.y > 0.0f) {
+                    movement.velocity.y = 0.0f;
+                }
             }
 
             const bool isWallSliding =

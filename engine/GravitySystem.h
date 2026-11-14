@@ -14,7 +14,7 @@ const float kFallGravityMultiplier = 2.0f;
 const float kFastFallGravityMultiplier = 3.0f;
 const float kMaxFallVelocity = 30.0f;
 const float kMaxFastFallVelocity = 45.0f;
-const float kWallSlideVelocity = 4.0f;
+const float kWallSlideVelocity = 1.0f;
 
 template <typename... Components>
 class GravitySystem : public System<Components...> {
