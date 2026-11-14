@@ -18,19 +18,25 @@
 
 Movement and gravity are discrete per-update values. Player input accelerates toward a run speed limit and supports variable-height jumps, wall jumps, and a press-triggered dash.
 
-| Constant | Value |
-|---|---|
-| Run speed | 7 |
-| Jump velocity | 18 |
-| Dash velocity | 40 |
-| Ground / air acceleration | 4 / 3 |
-| Dash cooldown | 60 updates |
+| Constant                  | Value      |
+| ------------------------- | ---------- |
+| Run speed                 | 7          |
+| Jump velocity             | 18         |
+| Dash velocity             | 40         |
+| Ground / air acceleration | 4 / 3      |
+| Dash cooldown             | 60 updates |
 
-`GravitySystem` doubles gravity while falling, triples it while fast falling, and caps fall speed.
+`GravitySystem` doubles gravity while falling, triples it while fast falling, caps fall speed, and limits wall sliding to 1 pixel per update.
+
+Wall jumps use coyote time: a wall jump is still allowed for 6 updates after leaving a wall.
+
+When left and right are both held, the most recently pressed arrow wins.
+
+Dashing while falling cancels downward velocity.
 
 ### Stars
 
-Stars are dynamic entities without an `InputComponent`. `SpawnSystem` gives them a small random upward launch (5 pixels per update) and a downward `GravityComponent`. `CollisionSystem` handles star bounces, star-star collisions, and deferred collection/removal.
+Stars are dynamic entities without an `InputComponent`. `SpawnSystem` gives them a small random upward launch (5 pixels per update) and a downward `GravityComponent`. `CollisionSystem` handles star bounces, star-star collisions, and deferred collection/removal. One extra star is placed outside the last wall. It does not move and has no gravity.
 
 - Bounce restitution: **0.7**
 - Stars settle when reflected speed is below **1 pixel per update**
@@ -50,19 +56,19 @@ The map loader loads `sky.map` before `world.map` so background sprites are adde
 
 Systems take `EngineView` rather than `ECSEngine` and obtain managers through its manager getters. The systems in `main.cpp` are registered and run in this order:
 
-| # | System | Purpose |
-|---|---|---|
-| 1 | `CollisionLateSystem` | Snapshots collision boxes before anything moves |
-| 2 | `InputSystem` | Updates player movement intent |
-| 3 | `GravitySystem` | Applies acceleration and fall limits |
-| 4 | `MovementSystem` | Changes entity locations |
-| 5 | `CollisionSystem` | Resolves obstacles, handles stars, collects stars |
-| 6 | `ScoreSystem` | Updates the score display after collection |
-| 7 | `CameraSystem` | Follows the player and applies camera shake |
-| 8 | `SpriteSystem` | Draws world-space and screen-space sprites |
-| 9 | `SpawnSystem` | Counts down spawners and creates stars for the next update |
+| #   | System                | Purpose                                                    |
+| --- | --------------------- | ---------------------------------------------------------- |
+| 1   | `CollisionLateSystem` | Snapshots collision boxes before anything moves            |
+| 2   | `InputSystem`         | Updates player movement intent                             |
+| 3   | `GravitySystem`       | Applies acceleration and fall limits                       |
+| 4   | `MovementSystem`      | Changes entity locations                                   |
+| 5   | `CollisionSystem`     | Resolves obstacles, handles stars, collects stars          |
+| 6   | `ScoreSystem`         | Updates the score display after collection                 |
+| 7   | `CameraSystem`        | Follows the player and applies camera shake                |
+| 8   | `SpriteSystem`        | Draws world-space and screen-space sprites                 |
+| 9   | `SpawnSystem`         | Counts down spawners and creates stars for the next update |
 
-The order is significant: the collision snapshot must precede movement, and collision resolution must follow it. Score updates follow collection, and drawing follows all state updates. Spawns happen last, so new stars are updated and drawn on the next frame.
+Boxes are saved before anything moves and resolved after movement. Spawning runs last, so new stars appear on the next frame.
 
 `SystemManager` owns its systems, runs them in insertion order, and stops immediately when one returns `kExit`.
 
@@ -70,10 +76,10 @@ The order is significant: the collision snapshot must precede movement, and coll
 
 `ECSEngine` snapshots `keydown` into `lastKeydown` at the start of each frame, then polls events and updates `keydown` on every `InputComponent`. Losing window focus clears held key state.
 
-| Key | Action |
-|---|---|
+| Key | Action                         |
+| --- | ------------------------------ |
 | `D` | Toggle collision debug drawing |
-| `P` | Pause / resume |
+| `P` | Pause / resume                 |
 | `N` | Advance one frame while paused |
 
 ---
@@ -83,7 +89,7 @@ The order is significant: the collision snapshot must precede movement, and coll
 The following primary areas are based on the Git commit history:
 
 - **Harveer Deol:** sound, sprite, and window managers; component-header separation; input, collision, camera, and spawn systems; and related tests and integration.
-- **Zhasheken de Guia:** entity manager, system manager, component storage, `ECSEngine` view, map loader, movement, gravity, sprite, score, and collision systems; and related tests and integration.
+- **Zhasheken de Guia:** entity manager, system manager, component storage, `ECSEngine` view, map loader, movement, gravity, sprite, score, collision systems, movement tuning and related tests and integration.
 
 These are primary contributions, not exclusive ownership. Both team members shared responsibility.
 

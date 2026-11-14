@@ -96,8 +96,8 @@ Harveer Deol: sound, sprite, and window managers, component-header separation,
 input, collision, camera, and spawn systems, and related tests and integration.
 
 Zhasheken de Guia: entity manager, system manager, component storage, ECSEngine view,
-Map Loader, movement, gravity, sprite, score and collision systems, and related tests
-and integration.
+Map Loader, movement, gravity, sprite, score and collision systems, movement tuning,
+and related tests and integration.
 
 These are primary contributions, not exclusive ownership. Both team members
 shared responsiblilty.
