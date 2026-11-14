@@ -25,11 +25,13 @@ private:
     friend class EntityManager;
 
 public:
+    // Returns the assigned ID; EntityManager may reuse this ID after removal.
     EntityID GetID() const { return mID; }
 
+    // Returns the entity's name/type until the entity is overwritten or destroyed.
     const std::string& GetType() const { return mType; }
 
-    // Check if alive
+    // Reports whether this entity slot is currently alive; a removed ID can later be reused.
     bool IsValid() const { return mValid; }
 };
 

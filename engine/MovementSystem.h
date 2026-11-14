@@ -10,11 +10,13 @@ namespace ECSEngine {
 template <typename... Components>
 class MovementSystem : public System<Components...> {
 public:
+    // Returns this system's stable name.
     const std::string& GetName() const override {
         static std::string name("MovementSystem");
         return name;
     }
 
+    // Advances each entity with movement by its per-frame velocity.
     tSystemReturn Run(EngineView<Components...>* engine) override {
         EntityManager<Components...>& entities = engine->GetEntityManager();
         ComponentStorage<MovementComponent>& movements =

@@ -13,6 +13,7 @@
 
 namespace ECSEngine {
 
+// AI-assisted control implementation for issue #22; see ABOUT.TXT.
 inline constexpr float kMaxRunVelocity = 15.0f;
 inline constexpr float kDashVelocity = 50.0f;
 inline constexpr float kJumpVelocity = 25.0f;
@@ -65,11 +66,13 @@ inline int DashDirection(const InputComponent& input, const MovementComponent& m
 template <typename... Components>
 class InputSystem : public System<Components...> {
 public:
+    // Returns this system's stable name.
     const std::string& GetName() const override {
         static std::string name("InputSystem");
         return name;
     }
 
+    // Applies movement, jump, wall-jump, dash, and wall-slide input for one frame.
     tSystemReturn Run(EngineView<Components...>* engine) override {
         using namespace InputSystemDetail;
 

@@ -23,11 +23,13 @@ private:
     }
 
 public:
+    // Returns this system's stable name.
     const std::string& GetName() const override {
         static std::string name("ScoreSystem");
         return name;
     }
 
+    // Updates the three digit sprites for every score component.
     tSystemReturn Run(EngineView<Components...>* engine) override {
         EntityManager<Components...>& entities = engine->GetEntityManager();
         ComponentStorage<ScoreComponent>& scores =
