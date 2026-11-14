@@ -1,8 +1,8 @@
 CMPUT350 Project 2: ECS Platformer
 ==================================
 
-Implementation notes
---------------------
+Engine implementation notes
+---------------------------
 
 EntityManager stores entities in a vector and reuses removed entity IDs from a
 free list. Each entity has a component-index table; kNullComponent means that
@@ -15,28 +15,34 @@ CollisionComponent.collisionBox is relative to LocationComponent.loc.
 CollisionLateSystem records the translated world-space box before movement;
 CollisionSystem compares it with the post-movement box to resolve contacts.
 
-Movement and gravity are discrete per update values. Player input accelerates
-toward a run speed limit, supports variable height jumps, wall jumps, and a
-press triggered dash. Current input tuning is run speed 15, jump velocity 25,
-dash velocity 50, ground/air acceleration 5/4, and a 60 update dash cooldown.
-GravitySystem doubles gravity while falling, triples it while fast falling,
-and caps fall speed.
-
-Stars are dynamic entities without InputComponent. SpawnSystem gives them a
-small random upward launch (2 pixels per update) and downward
-GravityComponent; CollisionSystem handles star bounces, star star collisions,
-and deferred collection/removal. Star bounces use 0.7 restitution and settle
-when reflected speed is below 1 pixel per update.
-
 SoundManager uses one map for sf::SoundBuffer ownership and a second map for
 sf::Sound objects that refer to those buffers. SpriteManager caches textures
 by path and stores sf::Sprite objects in a deque, so adding sprites preserves
 references to existing sprites. Re registering a texture path reuses its
 texture but returns a new sprite ID.
 
+Gameplay implementation notes
+-----------------------------
+
+Movement and gravity are per update values. Current input tuning is run speed
+7, jump velocity 18, dash velocity 40, ground/air acceleration 4/3, and a 60
+update dash cooldown.
+
+Wall jumps use coyote time: a wall jump is still allowed for 6 updates after
+leaving a wall.
+
+When left and right are both held, the most recently pressed arrow wins.
+
+Dashing while falling cancels downward velocity.
+
+Stars are dynamic entities without InputComponent. SpawnSystem gives them a
+small random upward launch (5 pixels per update) and downward
+GravityComponent; CollisionSystem handles star bounces, star star collisions,
+and deferred collection/removal. Star bounces use 0.7 restitution and settle
+when reflected speed is below 1 pixel per update.
+
 The map loader loads sky.map before world.map so background sprites are added
-first. CMake copies the whole assets/ directory into the build directory.
-The map files and sprite/audio assets are in assets/.
+first.
 
 System access and update order
 ------------------------------
@@ -54,22 +60,14 @@ manager getters. The systems in main.cpp are registered and run in this order:
 8. SpriteSystem draws world space and screen space sprites.
 9. SpawnSystem counts down spawners and creates stars for the next update.
 
-The order is significant: the collision snapshot must precede movement, and
-collision resolution must follow it. Score updates follow collection; drawing
-follows all state updates. Spawns happen last, so new stars are updated and
-drawn on the next frame. SystemManager owns its systems, runs them in insertion
-order, and stops immediately when one returns kExit.
+Boxes are saved before anything moves and resolved after movement. Spawning
+runs last, so new stars appear on the next frame. SystemManager runs systems
+in the order they were added and stops if one returns kExit.
 
 ECSEngine snapshots keydown into lastKeydown at the start of each frame, then
 polls events and updates keydown on every InputComponent. Losing window focus
 clears held key state. D toggles collision debug drawing, P pauses/resumes, and
 N advances one frame while paused.
-
-Current hazard limitation: the map loader currently treats dictionary-2 tiles
-as solid but does not mark spike tiles with CollisionComponent.doesDamage, and
-CollisionSystem does not yet use RespawnComponent for a special spike
-response. Spike behavior still needs to be implemented and play-tested if it
-is required by the final platformer specification.
 
 AI assistance disclosure
 ------------------------

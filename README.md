@@ -20,17 +20,17 @@ Movement and gravity are discrete per-update values. Player input accelerates to
 
 | Constant | Value |
 |---|---|
-| Run speed | 15 |
-| Jump velocity | 25 |
-| Dash velocity | 50 |
-| Ground / air acceleration | 5 / 4 |
+| Run speed | 7 |
+| Jump velocity | 18 |
+| Dash velocity | 40 |
+| Ground / air acceleration | 4 / 3 |
 | Dash cooldown | 60 updates |
 
 `GravitySystem` doubles gravity while falling, triples it while fast falling, and caps fall speed.
 
 ### Stars
 
-Stars are dynamic entities without an `InputComponent`. `SpawnSystem` gives them a small random upward launch (2 pixels per update) and a downward `GravityComponent`. `CollisionSystem` handles star bounces, star-star collisions, and deferred collection/removal.
+Stars are dynamic entities without an `InputComponent`. `SpawnSystem` gives them a small random upward launch (5 pixels per update) and a downward `GravityComponent`. `CollisionSystem` handles star bounces, star-star collisions, and deferred collection/removal.
 
 - Bounce restitution: **0.7**
 - Stars settle when reflected speed is below **1 pixel per update**
