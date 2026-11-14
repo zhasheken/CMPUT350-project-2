@@ -16,8 +16,12 @@ namespace ECSEngine {
 template <typename... Components>
 class EntityManager {
 public:
+    // Maps each entity and component type to a storage slot; kNullComponent marks absence.
     static constexpr size_t kNullComponent = std::numeric_limits<size_t>::max();
     using tEntity = std::vector<Entity>;
+
+    // Creates an entity and returns its ID, reusing the most recently removed ID when possible.
+    // Entity IDs remain valid only until removal; a reused ID identifies a new entity.
     [[nodiscard]] EntityID CreateEntity(const std::string& name) {
         tComponentIndices indices;
         indices.fill(kNullComponent);
@@ -41,6 +45,7 @@ public:
 
     using const_iterator = typename tEntity::const_iterator;
 
+    // Removes all components and frees the entity ID for later reuse.
     void RemoveEntity(EntityID entity) {
         assert(IsEntityIDValid(entity));
         if (!IsEntityIDValid(entity)) {
@@ -55,6 +60,7 @@ public:
         mFreeEntityIDList.push_back(entity);
     }
 
+    // Adds or replaces T on entity; adding may grow T's storage and invalidate its references.
     template <typename T>
     void AddComponent(EntityID entity, T component) {
         assert(IsEntityIDValid(entity));
@@ -73,6 +79,7 @@ public:
         mComponentIndices[entity][index] = slot;
     }
 
+    // Removes T from entity and makes its component slot available for reuse.
     template <typename T>
     void RemoveComponent(EntityID entity) {
         assert(HasComponent<T>(entity));
@@ -87,6 +94,7 @@ public:
         mComponentIndices[entity][index] = kNullComponent;
     }
 
+    // Returns whether entity currently has T; invalid IDs return false.
     template <typename T>
     bool HasComponent(EntityID entity) const {
         if (!IsEntityIDValid(entity)) {
@@ -96,6 +104,8 @@ public:
         return mComponentIndices[entity][index] != kNullComponent;
     }
 
+    // Returns entity's T; requires HasComponent<T>(entity). The reference may be invalidated
+    // when AddComponent<T> grows the component storage.
     template <typename T>
     T& GetComponent(EntityID entity) {
         assert(HasComponent<T>(entity));
@@ -104,12 +114,14 @@ public:
         return GetComponentStorage<T>().Get(slot);
     }
 
+    // Returns T's storage, owned by this manager and valid until manager destruction.
     template <typename T>
     ComponentStorage<T>& GetComponentStorage() {
         constexpr size_t index = GetTypeIndex<T>();
         return std::get<index>(mComponentStorages);
     }
 
+    // Returns whether entity currently refers to a live entity slot.
     bool IsEntityIDValid(EntityID entity) const {
         if (entity >= mEntities.size()) {
             return false;
@@ -117,9 +129,13 @@ public:
         return mEntities[entity].IsValid();
     }
 
+    // Iterates all entity slots, including invalid ones; vector growth may invalidate iterators.
     const_iterator cbegin() const { return mEntities.begin(); }
+    // Returns the end iterator; vector growth may invalidate iterators.
     const_iterator cend() const { return mEntities.end(); }
+    // Iterates all entity slots, including invalid ones; vector growth may invalidate iterators.
     const_iterator begin() { return mEntities.begin(); }
+    // Returns the end iterator; vector growth may invalidate iterators.
     const_iterator end() { return mEntities.end(); }
 
 private:

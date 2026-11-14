@@ -5,7 +5,7 @@
 namespace ECSEngine {
 
 struct MovementComponent {
-    Point2D velocity{};  // Velocity in pixels per second
+    Point2D velocity{};  // Velocity in pixels per update
 };
 
 }  // namespace ECSEngine

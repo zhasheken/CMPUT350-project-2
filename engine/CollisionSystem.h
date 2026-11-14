@@ -21,6 +21,8 @@
 
 namespace ECSEngine {
 
+// AI-assisted static-collision and star-interaction implementation for issues #23/#24;
+// see ABOUT.TXT.
 namespace CollisionSystemDetail {
 
 constexpr float kPositionEpsilon = 0.001f;
@@ -153,11 +155,13 @@ inline float BounceVelocity(float velocity) {
 template <typename... Components>
 class CollisionSystem : public System<Components...> {
 public:
+    // Returns this system's stable name.
     const std::string& GetName() const override {
         static std::string name("CollisionSystem");
         return name;
     }
 
+    // Resolves dynamic collisions, star pairs, player collection, score, and feedback.
     tSystemReturn Run(EngineView<Components...>* engine) override {
         using namespace CollisionSystemDetail;
 

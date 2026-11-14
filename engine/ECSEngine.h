@@ -23,28 +23,45 @@ namespace ECSEngine {
 template <typename... Components>
 class EngineView {
 public:
+    // Returns an engine-owned manager; references remain valid while the engine is alive.
     virtual SoundManager& GetSoundManager() = 0;
+
+    // Returns an engine-owned manager; references remain valid while the engine is alive.
     virtual SpriteManager& GetSpriteManager() = 0;
+
+    // Returns an engine-owned manager; references remain valid while the engine is alive.
     virtual EntityManager<Components...>& GetEntityManager() = 0;
+
+    // Returns an engine-owned manager; references remain valid while the engine is alive.
     virtual WindowManager& GetWindowManager() = 0;
 };
 
 template <typename... Components>
 class ECSEngine : public EngineView<Components...> {
 public:
+    // Creates the ECS managers and a window with the requested dimensions and title.
     ECSEngine(unsigned int width, unsigned int height, const std::string& name);
+
+    // Releases engine-owned managers and their resources.
     ~ECSEngine();
 
+    // Processes events, updates systems in registration order, and displays each frame.
+    // Key states are snapshotted before event polling; key events update every InputComponent.
     void Run();
 
+    // Returns the engine-owned sound manager; valid while this engine exists.
     SoundManager& GetSoundManager() override { return mSoundManager; }
 
+    // Returns the engine-owned sprite manager; valid while this engine exists.
     SpriteManager& GetSpriteManager() override { return mSpriteManager; }
 
+    // Returns the engine-owned entity manager; valid while this engine exists.
     EntityManager<Components...>& GetEntityManager() override { return mEntityManager; }
 
+    // Returns the engine-owned window manager; valid while this engine exists.
     WindowManager& GetWindowManager() override { return mWindowManager; }
 
+    // Returns the system manager for setup; it owns systems added to it.
     SystemManager<Components...>& GetSystemManager() { return mSystemManager; }
 
 private:

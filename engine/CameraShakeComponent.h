@@ -4,6 +4,7 @@
 
 namespace ECSEngine {
 
+
 struct CameraShakeComponent {
     int frameLimit{};
     Point2D offset{};

@@ -22,7 +22,7 @@ namespace ECSEngine {
 namespace SpawnSystemDetail {
 
 inline constexpr const char* kStarSpawnType = "star";
-inline constexpr float kStarSpeed = 15.0f;
+inline constexpr float kStarSpeed = 5.0f;
 inline constexpr float kStarGravity = 1.0f;
 inline constexpr float kPi = 3.14159265358979323846f;
 
@@ -80,6 +80,7 @@ bool SpawnStar(EntityManager<Components...>& entities, const SpawnRequest& reque
     MovementComponent movement{};
     movement.velocity = velocity;
     entities.AddComponent(starID, movement);
+    entities.AddComponent(starID, GravityComponent(Point2D(0.0f, 1.0f)));
 
     CollisionComponent collision{};
     collision.collisionBox = starCollisionBox;
@@ -104,13 +105,16 @@ bool SpawnStar(EntityManager<Components...>& entities, const SpawnRequest& reque
 template <typename... Components>
 class SpawnSystem : public System<Components...> {
 public:
+    // Seeds the random direction generator for this spawner system.
     SpawnSystem() : mRandomGenerator(std::random_device{}()) {}
 
+    // Returns this system's stable name.
     const std::string& GetName() const override {
         static std::string name("SpawnSystem");
         return name;
     }
 
+    // Counts down active spawners and creates queued stars for one frame.
     tSystemReturn Run(EngineView<Components...>* engine) override {
         auto& entities = engine->GetEntityManager();
         auto& spriteManager = engine->GetSpriteManager();

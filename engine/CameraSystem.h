@@ -71,11 +71,13 @@ inline Point2D AdvanceShake(CameraShakeComponent& shake) {
 template <typename... Components>
 class CameraSystem : public System<Components...> {
 public:
+    // Returns this system's stable name.
     const std::string& GetName() const override {
         static std::string name = "CameraSystem";
         return name;
     }
 
+    // Tracks camera targets and advances any active shake for one frame.
     tSystemReturn Run(EngineView<Components...>* engine) override {
         using namespace CameraSystemDetail;
 

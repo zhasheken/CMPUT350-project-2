@@ -19,11 +19,13 @@ const float kWallSlideVelocity = 1.0f;
 template <typename... Components>
 class GravitySystem : public System<Components...> {
 public:
+    // Returns this system's stable name.
     const std::string& GetName() const override {
         static std::string name("GravitySystem");
         return name;
     }
 
+    // Applies gravity, fall limits, fast-fall, and wall-slide limits for one frame.
     tSystemReturn Run(EngineView<Components...>* engine) override {
         EntityManager<Components...>& entities = engine->GetEntityManager();
         ComponentStorage<GravityComponent>& gravities =

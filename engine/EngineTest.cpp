@@ -140,6 +140,7 @@ void TestEveryComponentType() {
     Check(!manager.GetComponentStorage<GravityComponent>().IsValid(0), "gravity freed with entity");
 }
 
+// AI-assisted regression coverage for collision and star behavior; see ABOUT.TXT.
 void TestCollisionGeometry() {
     CollisionComponent collision{};
     collision.collisionBox = {{2.0f, 3.0f}, 4.0f, 5.0f};
@@ -212,6 +213,7 @@ void TestCollisionGeometry() {
           "small star bounce velocity settles to zero");
 }
 
+// AI-assisted regression coverage for input issue #22; see ABOUT.TXT.
 void TestInputHelpers() {
     InputComponent input(0);
     MovementComponent movement{};
@@ -252,6 +254,7 @@ void TestInputHelpers() {
     Check(kDashInterval == 60, "dash cooldown lasts one second at 60 frames per second");
 }
 
+// AI-assisted regression coverage for camera issue #25; see ABOUT.TXT.
 void TestCameraHelpers() {
     using namespace CameraSystemDetail;
 
@@ -278,6 +281,7 @@ void TestCameraHelpers() {
           "camera shake expires after its frame limit");
 }
 
+// AI-assisted regression coverage for spawn issue #27; see ABOUT.TXT.
 void TestSpawnStar() {
     TestManager entities;
     const EntityID spawnerID = entities.CreateEntity("spawner");
@@ -300,6 +304,9 @@ void TestSpawnStar() {
           "star starts immediately above the spawner collision");
     Check(!entities.GetComponent<CollisionComponent>(starID).staticEntity,
           "spawned star is dynamic");
+    Check(entities.HasComponent<GravityComponent>(starID) &&
+              entities.GetComponent<GravityComponent>(starID).acceleration.y == 1.0f,
+          "spawned star receives downward gravity");
     Check(entities.GetComponent<CollisionComponent>(starID).previousCollisionBox.topLeft.y ==
               136.0f,
           "spawned star starts with a world-space previous collision box");
@@ -307,8 +314,8 @@ void TestSpawnStar() {
               entities.GetComponent<SpriteComponent>(starID).worldSpace,
           "spawned star uses its configured world space sprite");
     const Point2D velocity = entities.GetComponent<MovementComponent>(starID).velocity;
-    Check(std::abs(std::sqrt(velocity.x * velocity.x + velocity.y * velocity.y) - 15.0f) <
-              0.001f,
+    Check(std::abs(std::sqrt(velocity.x * velocity.x + velocity.y * velocity.y) -
+                   SpawnSystemDetail::kStarSpeed) < 0.001f,
           "spawned star receives a fixed-speed random direction");
     Check(velocity.y <= 0.0f, "spawned star initially launches upward");
 }

@@ -8,6 +8,7 @@
 namespace ECSEngine {
 
 struct InputComponent {
+    // Associates the input state with its player entity.
     InputComponent(EntityID whichEntity) : entity(whichEntity) {}
     EntityID entity{};
     int lastDash{};

@@ -11,11 +11,13 @@ namespace ECSEngine {
 template <typename... Components>
 class CollisionLateSystem : public System<Components...> {
 public:
+    // Returns this system's stable name.
     const std::string& GetName() const override {
         static std::string name("CollisionLateSystem");
         return name;
     }
 
+    // Captures current collision boxes in world space before movement for this frame.
     tSystemReturn Run(EngineView<Components...>* engine) override {
         EntityManager<Components...>& entities = engine->GetEntityManager();
         ComponentStorage<CollisionComponent>& collisions =

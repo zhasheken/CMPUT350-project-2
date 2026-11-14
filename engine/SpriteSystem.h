@@ -14,11 +14,13 @@ namespace ECSEngine {
 template <typename... Components>
 class SpriteSystem : public System<Components...> {
 public:
+    // Returns this system's stable name.
     const std::string& GetName() const override {
         static std::string name("SpriteSystem");
         return name;
     }
 
+    // Draws registered sprites in storage order, transforming world-space sprites via the camera.
     tSystemReturn Run(EngineView<Components...>* engine) override {
         EntityManager<Components...>& entities = engine->GetEntityManager();
         SpriteManager& spriteManager = engine->GetSpriteManager();
