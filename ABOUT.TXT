@@ -18,15 +18,15 @@ CollisionSystem compares it with the post-movement box to resolve contacts.
 SoundManager uses one map for sf::SoundBuffer ownership and a second map for
 sf::Sound objects that refer to those buffers. SpriteManager caches textures
 by path and stores sf::Sprite objects in a deque, so adding sprites preserves
-references to existing sprites. Re registering a texture path reuses its
-texture but returns a new sprite ID.
+references to existing sprites. Registering the same texture path again
+reuses its texture but returns a new sprite ID.
 
 Gameplay implementation notes
 -----------------------------
 
 Movement and gravity are per update values. Current input tuning is run speed
-7, jump velocity 18, dash velocity 40, ground/air acceleration 4/3, and a 60
-update dash cooldown.
+7, jump velocity 18, dash velocity 40, ground/air acceleration 4/3, and a dash
+cooldown of 60 updates.
 
 Wall jumps use coyote time: a wall jump is still allowed for 6 updates after
 leaving a wall.
@@ -37,7 +37,7 @@ Dashing while falling cancels downward velocity.
 
 Stars are dynamic entities without InputComponent. SpawnSystem gives them a
 small random upward launch (5 pixels per update) and downward
-GravityComponent; CollisionSystem handles star bounces, star star collisions,
+GravityComponent; CollisionSystem handles star bounces, collisions between stars,
 and deferred collection/removal. Star bounces use 0.7 restitution and settle
 when reflected speed is below 1 pixel per update.
 
@@ -95,12 +95,12 @@ The following primary areas are based on the Git commit history:
 Harveer Deol: sound, sprite, and window managers, component-header separation,
 input, collision, camera, and spawn systems, and related tests and integration.
 
-Zhasheken de Guia: entity manager, system manager, component storage, ECSEngine view,
-Map Loader, movement, gravity, sprite, score and collision systems, movement tuning,
-and related tests and integration.
+Zhasheken de Guia: entity manager, system manager, component storage, ECSEngine
+view, map loader, movement, gravity, sprite, score, and collision systems,
+movement tuning, and related tests and integration.
 
 These are primary contributions, not exclusive ownership. Both team members
-shared responsiblilty.
+shared responsibility.
 
 Build and run
 -------------
