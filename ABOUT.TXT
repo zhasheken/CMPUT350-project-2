@@ -86,6 +86,17 @@ Reflection: This helped me understand how entities, component storage and the in
 Prompt: “Help me finish the engine loop: processing SFML events into the input component, running the systems, and drawing debug collision boxes.”
 Reflection: This helped me understand how key presses get into the input component and how the debug, pause and step keys work. The first version used things I didn’t understand but further chats simplified the loop into steps I could understand much better.
 
+Prompt: “Help me implement the input system: arrow keys accelerate toward a max run speed, z jumps, c dashes at most once per cooldown, and releasing jump cuts the jump short. Give me a simple step by step.”
+Reflection: This helped me understand how key state turns into velocity, and how comparing keydown to lastKeydown lets us detect a press versus a hold. It made variable height jumps and the dash cooldown straightforward to add.
+
+Prompt: “Explain how to save the previous collision box before movement and use it to figure out which side of a static obstacle was hit, then push the entity out and set onGround, onCeiling, onLeftWall and onRightWall. Walk me through it step by step. provide pseudo code.”
+Reflection: This helped me understand why CollisionLateSystem has to snapshot the box before movement and why CollisionSystem compares it with the post-movement box. Using the previous box to decide the hit side removed most of the tunneling and corner problems.
+
+Prompt: “Help me handle stars in the collision system, they bounce off static obstacles losing speed, collide with each other, and get collected and removed when the player touches them.”
+Reflection: This showed me why star removal should be deferred until after iteration so entity storage isn't modified mid-loop. 
+
+Prompt: “Help me understand how the camera turns world coordinates into what shows up on screen. I have a world position for the player, a camera position and a world units per pixel scale, and I don't get how WorldToWindow and WindowToWorld fit together or how the 10 and 30 percent screen zones map back to world positions.”
+Reflection: This helped me understand that the camera is just a world position and a scale, and that every entity's screen position is its world position minus the camera, divided by the scale. Once that clicked, the exclusion zones made sense as screen space rectangles that I convert back to world space to decide how far to move the camera. It also helped me see how camera shake works as a small offset added to the camera position each frame and counted down.
 
 Team contributions
 ------------------
