@@ -72,8 +72,7 @@ N advances one frame while paused.
 AI assistance disclosure
 ------------------------
 
-AI assistance was used to implement or refine player input, collision, understadning of 
-camera following and shake, Focused tests for those behaviors were also AI-assisted. 
+The following AI assistance was used:
 
 Prompt: “The wall jump feels weird because it pushes me away from the wall before I press anything and its hard to jump off. Help me implement coyote time, please give me a simple step by step.”
 Reflection: This was successful because not having coyote time made wall jumps difficult. The code was short and easy to follow. 
