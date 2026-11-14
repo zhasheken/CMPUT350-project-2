@@ -36,6 +36,15 @@ std::string gResourcePath = "../assets/";
         ECSEngine::RespawnComponent
 using Engine = ECSEngine::ECSEngine<COMPONENTS>;
 
+// every sound the game plays
+void LoadSounds(Engine& engine) {
+    engine.GetSoundManager().RegisterSound(gResourcePath + "footstep_grass_003.ogg", "land");
+    engine.GetSoundManager().RegisterSound(gResourcePath + "sfx_gem.ogg", "star");
+    engine.GetSoundManager().RegisterSound(gResourcePath + "sfx_jump.ogg", "jump");
+    engine.GetSoundManager().RegisterSound(gResourcePath + "footstep_snow_001.ogg", "wallSlide");
+    engine.GetSoundManager().RegisterSound(gResourcePath + "error_008.ogg", "spike");
+}
+
 // place an entity with a sprite
 void AddWorldLocationAndSprite(Engine& engine, ECSEngine::EntityID entity, float x, float y,
                                ECSEngine::SpriteID spriteID, float width, float height) {
@@ -184,6 +193,59 @@ void LoadMap(Engine& engine, const std::string& resourcePath, const std::string&
     }
 }
 
+// player with all its components
+ECSEngine::EntityID SetupPlayer(Engine& engine) {
+    ECSEngine::EntityManager<COMPONENTS>& entities = engine.GetEntityManager();
+    ECSEngine::EntityID player = entities.CreateEntity("player");
+
+    // first character in the sheet
+    ECSEngine::Rect playerSource{ECSEngine::Point2D(0, 0), 128, 128};
+    ECSEngine::SpriteID playerSprite = engine.GetSpriteManager().RegisterTexture(
+        gResourcePath + "spritesheet-characters-default.png", playerSource);
+    AddWorldLocationAndSprite(engine, player, 13 * 64, 4 * 64, playerSprite, 64, 64);
+
+    // box around the body only
+    ECSEngine::CollisionComponent playerCollision;
+    playerCollision.collisionBox = ECSEngine::Rect{ECSEngine::Point2D(14, 15), 36, 48};
+    entities.AddComponent(player, playerCollision);
+
+    ECSEngine::MovementComponent playerMovement;
+    entities.AddComponent(player, playerMovement);
+
+    ECSEngine::InputComponent playerInput(player);
+    entities.AddComponent(player, playerInput);
+
+    ECSEngine::GravityComponent playerGravity(ECSEngine::Point2D(0.0f, 0.7f));
+    entities.AddComponent(player, playerGravity);
+
+    // respawn where the player starts
+    ECSEngine::RespawnComponent playerRespawn;
+    playerRespawn.loc = entities.GetComponent<ECSEngine::LocationComponent>(player).loc;
+    entities.AddComponent(player, playerRespawn);
+
+    return player;
+}
+
+// place a star that stays still
+void AddCollectableStar(Engine& engine, float x, float y, const std::string& resourcePath) {
+    ECSEngine::EntityManager<COMPONENTS>& entities = engine.GetEntityManager();
+    ECSEngine::EntityID star = entities.CreateEntity("star");
+
+    // star sprite in the sheet
+    ECSEngine::Rect starSource{ECSEngine::Point2D(640, 320), 64, 64};
+    ECSEngine::SpriteID starSprite = engine.GetSpriteManager().RegisterTexture(
+        resourcePath + "spritesheet-tiles-default.png", starSource);
+    AddWorldLocationAndSprite(engine, star, x, y, starSprite, 64, 64);
+
+    // collectable but not moving
+    ECSEngine::CollisionComponent starCollision;
+    starCollision.collisionBox = ECSEngine::Rect{ECSEngine::Point2D(0, 0), 64, 64};
+    entities.AddComponent(star, starCollision);
+
+    ECSEngine::MovementComponent starMovement;
+    entities.AddComponent(star, starMovement);
+}
+
 // load the 0 to 9 sprites
 void RegisterDigitSprites(Engine& engine, ECSEngine::ScoreComponent& score) {
     for (int digit = 0; digit < 10; digit++) {
@@ -216,57 +278,9 @@ ECSEngine::EntityID CreateDigitDisplay(Engine& engine, float x, float y,
     return digitDisplayID;
 }
 
-int main(int argc, char* argv[]) {
-    if (argc >= 3 && argv[1] == std::string("-path")) {
-        gResourcePath = argv[2];
-    }
-    std::cout << "Usage: " << argv[0] << " [-path resource_path]\n";
-    std::cout << "Using resource path: " << gResourcePath << "\n";
-
-    // Engine test code
-    Engine engine(1024, 768, "Test Engine");
-
-    // Load sounds
-    engine.GetSoundManager().RegisterSound(gResourcePath + "footstep_grass_003.ogg", "land");
-    engine.GetSoundManager().RegisterSound(gResourcePath + "sfx_gem.ogg", "star");
-    engine.GetSoundManager().RegisterSound(gResourcePath + "sfx_jump.ogg", "jump");
-    engine.GetSoundManager().RegisterSound(gResourcePath + "footstep_snow_001.ogg", "wallSlide");
-    engine.GetSoundManager().RegisterSound(gResourcePath + "error_008.ogg", "spike");
-
-    // Load maps
-    LoadMap(engine, gResourcePath, "sky.map");
-    LoadMap(engine, gResourcePath, "world.map");
-
-    // Place player
+// score entity and its digits
+void CreateScoreDisplay(Engine& engine) {
     ECSEngine::EntityManager<COMPONENTS>& entities = engine.GetEntityManager();
-    ECSEngine::EntityID player = entities.CreateEntity("player");
-
-    // first character in the sheet
-    ECSEngine::Rect playerSource{ECSEngine::Point2D(0, 0), 128, 128};
-    ECSEngine::SpriteID playerSprite = engine.GetSpriteManager().RegisterTexture(
-        gResourcePath + "spritesheet-characters-default.png", playerSource);
-    AddWorldLocationAndSprite(engine, player, 13 * 64, 4 * 64, playerSprite, 64, 64);
-
-    // box around the body only
-    ECSEngine::CollisionComponent playerCollision;
-    playerCollision.collisionBox = ECSEngine::Rect{ECSEngine::Point2D(14, 15), 36, 48};
-    entities.AddComponent(player, playerCollision);
-
-    ECSEngine::MovementComponent playerMovement;
-    entities.AddComponent(player, playerMovement);
-
-    ECSEngine::InputComponent playerInput(player);
-    entities.AddComponent(player, playerInput);
-
-    ECSEngine::GravityComponent playerGravity(ECSEngine::Point2D(0.0f, 0.7f));
-    entities.AddComponent(player, playerGravity);
-
-    // respawn where the player starts
-    ECSEngine::RespawnComponent playerRespawn;
-    playerRespawn.loc = entities.GetComponent<ECSEngine::LocationComponent>(player).loc;
-    entities.AddComponent(player, playerRespawn);
-
-    // Setup score component
     ECSEngine::ScoreComponent score;
     RegisterDigitSprites(engine, score);
 
@@ -278,8 +292,11 @@ int main(int argc, char* argv[]) {
 
     ECSEngine::EntityID scoreEntity = entities.CreateEntity("score");
     entities.AddComponent(scoreEntity, score);
+}
 
-    // Setup Camera
+// camera that follows the player
+void HandleCamera(Engine& engine, ECSEngine::EntityID player) {
+    ECSEngine::EntityManager<COMPONENTS>& entities = engine.GetEntityManager();
     ECSEngine::EntityID camera = entities.CreateEntity("camera");
 
     // start on the current view
@@ -293,6 +310,37 @@ int main(int argc, char* argv[]) {
     ECSEngine::CameraFollowerComponent follower;
     follower.entityID = player;
     entities.AddComponent(camera, follower);
+}
+
+int main(int argc, char* argv[]) {
+    if (argc >= 3 && argv[1] == std::string("-path")) {
+        gResourcePath = argv[2];
+    }
+    std::cout << "Usage: " << argv[0] << " [-path resource_path]\n";
+    std::cout << "Using resource path: " << gResourcePath << "\n";
+
+    // Engine test code
+    Engine engine(1024, 768, "Test Engine");
+
+    // Load sounds
+    LoadSounds(engine);
+
+    // Load maps
+    LoadMap(engine, gResourcePath, "sky.map");
+    LoadMap(engine, gResourcePath, "world.map");
+
+    // Place player
+    ECSEngine::EntityID player = SetupPlayer(engine);
+
+    // star past the last wall
+    // right of column 53, wall middle
+    AddCollectableStar(engine, 54 * 64, 5 * 64, gResourcePath);
+
+    // Setup score component
+    CreateScoreDisplay(engine);
+
+    // Setup Camera
+    HandleCamera(engine, player);
 
     // Add all systems
     auto& sm = engine.GetSystemManager();
