@@ -105,5 +105,3 @@ cmake --build build --parallel
 ctest --test-dir build --output-on-failure
 (cd build/platformer && ./platformer)
 ```
-
-The project uses C++20 and enables `-Wall`, `-Wextra`, and `-Wpedantic`. A successful local build does not replace the required lab-machine build and gameplay test.
