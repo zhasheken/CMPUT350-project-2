@@ -5,7 +5,7 @@
 namespace ECSEngine {
 
 struct RespawnComponent {
-    Point2D loc{};
+    Point2D loc{};  // Location the entity returns to when it dies
 };
 
 }  // namespace ECSEngine

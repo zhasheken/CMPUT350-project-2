@@ -22,7 +22,8 @@ namespace ECSEngine {
 namespace SpawnSystemDetail {
 
 inline constexpr const char* kStarSpawnType = "star";
-inline constexpr float kStarSpeed = 2.0f;
+inline constexpr float kStarSpeed = 5.0f;
+inline constexpr float kStarGravity = 1.0f;
 inline constexpr float kPi = 3.14159265358979323846f;
 
 struct SpawnRequest {
@@ -79,7 +80,6 @@ bool SpawnStar(EntityManager<Components...>& entities, const SpawnRequest& reque
     MovementComponent movement{};
     movement.velocity = velocity;
     entities.AddComponent(starID, movement);
-    entities.AddComponent(starID, GravityComponent(Point2D(0.0f, 1.0f)));
 
     CollisionComponent collision{};
     collision.collisionBox = starCollisionBox;
@@ -91,6 +91,10 @@ bool SpawnStar(EntityManager<Components...>& entities, const SpawnRequest& reque
     sprite.bounds = Rect{Point2D(0.0f, 0.0f), starWidth, starHeight};
     sprite.worldSpace = true;
     entities.AddComponent(starID, sprite);
+
+    // stars fall and bounce
+    GravityComponent gravity(Point2D(0.0f, kStarGravity));
+    entities.AddComponent(starID, gravity);
 
     return true;
 }

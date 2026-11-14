@@ -13,6 +13,9 @@ struct InputComponent {
     EntityID entity{};
     int lastDash{};
     bool wallSliding{};
+    int lastHorizontalPress{};  // -1 left, 1 right
+    int wallCoyote{};           // frames wall jump still allowed
+    int wallSide{};             // -1 wall on left, 1 right
     std::bitset<Key::ScanCount> keydown{};
     std::bitset<Key::ScanCount> lastKeydown{};
 };

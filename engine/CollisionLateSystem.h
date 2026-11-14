@@ -19,28 +19,30 @@ public:
 
     // Captures current collision boxes in world space before movement for this frame.
     tSystemReturn Run(EngineView<Components...>* engine) override {
-        auto& entities = engine->GetEntityManager();
+        EntityManager<Components...>& entities = engine->GetEntityManager();
+        ComponentStorage<CollisionComponent>& collisions =
+            entities.template GetComponentStorage<CollisionComponent>();
 
-        for (const Entity& entity : entities) {
-            const EntityID id = entity.GetID();
-            if (!entities.IsEntityIDValid(id) ||
-                !entities.template HasComponent<CollisionComponent>(id) ||
-                !entities.template HasComponent<LocationComponent>(id)) {
+        // save boxes before anything moves
+        for (size_t i = 0; i < collisions.Size(); i++) {
+            if (!collisions.IsValid(i)) {
                 continue;
             }
 
-            const CollisionComponent& collision =
-                entities.template GetComponent<CollisionComponent>(id);
-            const LocationComponent& location =
-                entities.template GetComponent<LocationComponent>(id);
-            // collisionBox is local; previousCollisionBox is a world space snapshot.
-            Rect previousBox = collision.collisionBox;
-            previousBox.topLeft.x += location.loc.x;
-            previousBox.topLeft.y += location.loc.y;
-            entities.template GetComponent<CollisionComponent>(id).previousCollisionBox =
-                previousBox;
-        }
+            // skip boxes with no location
+            EntityID owner = collisions.GetOwner(i);
+            if (!entities.template HasComponent<LocationComponent>(owner)) {
+                continue;
+            }
 
+            Point2D location = entities.template GetComponent<LocationComponent>(owner).loc;
+            CollisionComponent& collision = collisions.Get(i);
+
+            // store it in world coordinates
+            collision.previousCollisionBox = collision.collisionBox;
+            collision.previousCollisionBox.topLeft.x += location.x;
+            collision.previousCollisionBox.topLeft.y += location.y;
+        }
         return kContinue;
     }
 };

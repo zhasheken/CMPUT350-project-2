@@ -15,6 +15,7 @@
 #include "InputComponent.h"
 #include "LocationComponent.h"
 #include "MovementComponent.h"
+#include "RespawnComponent.h"
 #include "ScoreComponent.h"
 #include "SystemManager.h"
 
@@ -29,6 +30,7 @@ constexpr float kLandingImpactThreshold = 1.0f;
 constexpr float kWallImpactThreshold = 5.0f;
 constexpr float kShakePerSpeed = 0.1f;
 constexpr float kMaximumShake = 12.0f;
+constexpr float kSpikeShake = 10.0f;
 constexpr float kStarRestThreshold = 1.0f;
 constexpr float kStarRestitution = 0.7f;
 constexpr int kShakeFrameLimit = 5;
@@ -282,6 +284,7 @@ public:
             collision.onCeiling = 0;
             collision.onLeftWall = 0;
             collision.onRightWall = 0;
+            bool respawned = false;
 
             for (const EntityID staticID : staticEntities) {
                 if (!entities.IsEntityIDValid(staticID)) {
@@ -296,6 +299,25 @@ public:
                 const Rect current = WorldBox(collision, location);
                 if (!Overlaps(current, obstacle)) {
                     continue;
+                }
+
+                // spikes send the player back
+                if (isPlayer && staticCollision.doesDamage &&
+                    entities.template HasComponent<RespawnComponent>(id)) {
+                    // sound and shake on hit
+                    engine->GetSoundManager().GetSound("spike").play();
+                    shakeX += kSpikeShake;
+                    shakeY += kSpikeShake;
+                    shouldShake = true;
+
+                    location.loc = entities.template GetComponent<RespawnComponent>(id).loc;
+                    movement.velocity = Point2D{};
+                    collision.onGround = 0;
+                    collision.onCeiling = 0;
+                    collision.onLeftWall = 0;
+                    collision.onRightWall = 0;
+                    respawned = true;
+                    break;
                 }
 
                 const Resolution resolution =
@@ -324,6 +346,11 @@ public:
                         collision.onLeftWall = 1;
                         break;
                 }
+            }
+
+            // no landing effects after respawn
+            if (respawned) {
+                continue;
             }
 
             if (isPlayer && collision.onGround && !wasOnGround &&

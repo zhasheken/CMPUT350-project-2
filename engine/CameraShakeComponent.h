@@ -6,8 +6,8 @@ namespace ECSEngine {
 
 
 struct CameraShakeComponent {
-    int frameLimit{};
-    Point2D offset{};
+    int frameLimit{};  // Updates of shake left
+    Point2D offset{};  // Shake distance in pixels
 };
 
 }  // namespace ECSEngine
