@@ -28,6 +28,7 @@ constexpr float kLandingImpactThreshold = 1.0f;
 constexpr float kWallImpactThreshold = 5.0f;
 constexpr float kShakePerSpeed = 0.1f;
 constexpr float kMaximumShake = 12.0f;
+constexpr float kSpikeShake = 10.0f;
 constexpr float kStarRestThreshold = 1.0f;
 constexpr float kStarRestitution = 0.7f;
 constexpr int kShakeFrameLimit = 5;
@@ -299,6 +300,12 @@ public:
                 // spikes send the player back
                 if (isPlayer && staticCollision.doesDamage &&
                     entities.template HasComponent<RespawnComponent>(id)) {
+                    // sound and shake on hit
+                    engine->GetSoundManager().GetSound("spike").play();
+                    shakeX += kSpikeShake;
+                    shakeY += kSpikeShake;
+                    shouldShake = true;
+
                     location.loc = entities.template GetComponent<RespawnComponent>(id).loc;
                     movement.velocity = Point2D{};
                     collision.onGround = 0;
